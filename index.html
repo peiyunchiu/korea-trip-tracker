@@ -832,38 +832,71 @@
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <radialGradient id="grad-green-body" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0%" stop-color="#bdd4ae"/>
+      <stop offset="60%" stop-color="#9bb592"/>
+      <stop offset="100%" stop-color="#7a9974"/>
+    </radialGradient>
+    <radialGradient id="grad-green-head" cx="0.4" cy="0.3" r="0.7">
+      <stop offset="0%" stop-color="#c4d5b6"/>
+      <stop offset="100%" stop-color="#9ab69a"/>
+    </radialGradient>
+    <radialGradient id="grad-green-belly">
+      <stop offset="0%" stop-color="#e0e6c0" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#c8d4a8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="grad-blue-body" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0%" stop-color="#d0e2ed"/>
+      <stop offset="60%" stop-color="#aec6dc"/>
+      <stop offset="100%" stop-color="#86a4c0"/>
+    </radialGradient>
+    <radialGradient id="grad-blue-head" cx="0.4" cy="0.3" r="0.7">
+      <stop offset="0%" stop-color="#d6e4ee"/>
+      <stop offset="100%" stop-color="#aac3d6"/>
+    </radialGradient>
+    <radialGradient id="grad-blue-belly">
+      <stop offset="0%" stop-color="#ecf1f4" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#d4e2ec" stop-opacity="0"/>
+    </radialGradient>
+
     <symbol id="parrot" viewBox="0 0 120 130">
-      <!-- shadow -->
-      <ellipse cx="60" cy="120" rx="24" ry="3" fill="#000" opacity="0.06"/>
-      <!-- tail feathers -->
-      <path d="M 45 95 L 38 115 L 52 105 Z" fill="#7ba8c4"/>
-      <path d="M 75 95 L 82 115 L 68 105 Z" fill="#7ba8c4"/>
-      <path d="M 60 98 L 56 116 L 64 116 Z" fill="#8fb4c9"/>
-      <!-- body -->
-      <ellipse cx="60" cy="72" rx="32" ry="32" fill="#8fc8a0"/>
-      <!-- belly (lighter yellow-green) -->
-      <ellipse cx="56" cy="82" rx="22" ry="18" fill="#dce8a8"/>
-      <!-- left wing tuck -->
-      <path d="M 32 60 Q 28 75 36 88 Q 40 80 38 70 Z" fill="#7fb890" opacity="0.7"/>
-      <!-- right wing (signature blue) -->
-      <path d="M 80 56 Q 96 70 90 92 Q 84 88 76 84 Z" fill="#8fb4c9"/>
-      <path d="M 82 66 Q 90 78 88 90" stroke="#6f9ab2" stroke-width="1.5" fill="none" opacity="0.6"/>
-      <path d="M 86 72 Q 92 80 90 88" stroke="#6f9ab2" stroke-width="1.2" fill="none" opacity="0.4"/>
+      <!-- soft shadow under -->
+      <ellipse cx="60" cy="120" rx="26" ry="3" fill="#000" opacity="0.06"/>
+      <!-- short rounded tail -->
+      <path d="M 46 96 Q 50 112 60 110 Q 70 112 74 96 Z" fill="#7a9c84"/>
+      <!-- body (fluffy, gradient sage) -->
+      <ellipse cx="60" cy="74" rx="34" ry="33" fill="url(#grad-green-body)"/>
+      <!-- belly highlight -->
+      <ellipse cx="56" cy="86" rx="23" ry="20" fill="url(#grad-green-belly)"/>
+      <!-- feather texture strokes -->
+      <g stroke="#7a9974" stroke-width="0.5" fill="none" opacity="0.35" stroke-linecap="round">
+        <path d="M 50 78 Q 52 84 50 90"/>
+        <path d="M 58 80 Q 60 86 58 92"/>
+        <path d="M 66 78 Q 68 84 66 90"/>
+        <path d="M 42 74 Q 44 80 42 86"/>
+        <path d="M 74 76 Q 76 82 74 88"/>
+      </g>
+      <!-- right wing (signature blue tucked) -->
+      <path d="M 82 60 Q 96 72 91 92 Q 84 89 76 84 Q 79 72 82 60 Z" fill="#8bb4c9" opacity="0.85"/>
+      <path d="M 84 70 Q 90 80 88 90" stroke="#6f9ab2" stroke-width="1" fill="none" opacity="0.55"/>
+      <path d="M 87 76 Q 91 84 89 90" stroke="#6f9ab2" stroke-width="0.8" fill="none" opacity="0.4"/>
       <!-- head -->
-      <circle cx="60" cy="40" r="27" fill="#a0d4b0"/>
-      <!-- yellow forehead -->
-      <ellipse cx="60" cy="22" rx="15" ry="7" fill="#f4d878"/>
-      <!-- cheek blush -->
-      <circle cx="40" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
-      <circle cx="80" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
-      <!-- eyes -->
-      <circle cx="50" cy="40" r="4.5" fill="#2d211a"/>
-      <circle cx="70" cy="40" r="4.5" fill="#2d211a"/>
-      <circle cx="51.8" cy="38.2" r="1.5" fill="#fff"/>
-      <circle cx="71.8" cy="38.2" r="1.5" fill="#fff"/>
-      <!-- beak -->
-      <path d="M 54 49 Q 60 56 66 49 Q 64 54 60 55 Q 56 54 54 49 Z" fill="#f4c890"/>
-      <path d="M 56 50 Q 60 53 64 50" stroke="#e0a878" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <circle cx="60" cy="40" r="28" fill="url(#grad-green-head)"/>
+      <!-- subtle blue-grey cap on top -->
+      <path d="M 36 28 Q 60 16 84 28 Q 78 34 60 32 Q 42 34 36 28 Z" fill="#a4b6bc" opacity="0.45"/>
+      <!-- cheek blush (peach pink) -->
+      <circle cx="39" cy="46" r="6" fill="#f4b09a" opacity="0.55"/>
+      <circle cx="81" cy="46" r="6" fill="#f4b09a" opacity="0.55"/>
+      <!-- big soulful eyes -->
+      <circle cx="49" cy="42" r="5" fill="#2d211a"/>
+      <circle cx="71" cy="42" r="5" fill="#2d211a"/>
+      <circle cx="51" cy="40" r="1.8" fill="#fff"/>
+      <circle cx="73" cy="40" r="1.8" fill="#fff"/>
+      <circle cx="48" cy="44.5" r="0.6" fill="#fff" opacity="0.7"/>
+      <circle cx="70" cy="44.5" r="0.6" fill="#fff" opacity="0.7"/>
+      <!-- beak (peachy pink) -->
+      <path d="M 55 50 Q 60 58 65 50 Q 64 56 60 57 Q 56 56 55 50 Z" fill="#f0a890"/>
+      <path d="M 56 51 Q 60 55 64 51" stroke="#d88068" stroke-width="0.5" fill="none" opacity="0.45"/>
       <!-- tiny feet -->
       <g stroke="#d4a058" stroke-width="1.8" stroke-linecap="round" fill="none">
         <path d="M 51 102 L 49 110"/>
@@ -875,37 +908,54 @@
       </g>
     </symbol>
     <symbol id="parrot-blue" viewBox="0 0 120 130">
-      <!-- shadow -->
-      <ellipse cx="60" cy="120" rx="24" ry="3" fill="#000" opacity="0.06"/>
-      <!-- tail feathers (green-tinted, mirror of green parrot) -->
-      <path d="M 45 95 L 38 115 L 52 105 Z" fill="#7fb890"/>
-      <path d="M 75 95 L 82 115 L 68 105 Z" fill="#7fb890"/>
-      <path d="M 60 98 L 56 116 L 64 116 Z" fill="#8fc8a0"/>
-      <!-- body (soft sky blue) -->
-      <ellipse cx="60" cy="72" rx="32" ry="32" fill="#a8c8e0"/>
-      <!-- belly (lighter blue) -->
-      <ellipse cx="56" cy="82" rx="22" ry="18" fill="#dceaf4"/>
-      <!-- left wing tuck (deeper blue) -->
-      <path d="M 32 60 Q 28 75 36 88 Q 40 80 38 70 Z" fill="#8fb4c9" opacity="0.7"/>
-      <!-- right wing (green accent — flipped from green parrot) -->
-      <path d="M 80 56 Q 96 70 90 92 Q 84 88 76 84 Z" fill="#8fc8a0"/>
-      <path d="M 82 66 Q 90 78 88 90" stroke="#6fa078" stroke-width="1.5" fill="none" opacity="0.6"/>
-      <path d="M 86 72 Q 92 80 90 88" stroke="#6fa078" stroke-width="1.2" fill="none" opacity="0.4"/>
-      <!-- head (light blue) -->
-      <circle cx="60" cy="40" r="27" fill="#bdd4e8"/>
-      <!-- yellow forehead -->
-      <ellipse cx="60" cy="22" rx="15" ry="7" fill="#f4d878"/>
+      <!-- soft shadow -->
+      <ellipse cx="60" cy="120" rx="26" ry="3" fill="#000" opacity="0.06"/>
+      <!-- tail -->
+      <path d="M 46 96 Q 50 112 60 110 Q 70 112 74 96 Z" fill="#86a4c0"/>
+      <!-- body (gradient powder blue) -->
+      <ellipse cx="60" cy="74" rx="34" ry="33" fill="url(#grad-blue-body)"/>
+      <!-- belly highlight -->
+      <ellipse cx="56" cy="86" rx="23" ry="20" fill="url(#grad-blue-belly)"/>
+      <!-- feather texture strokes -->
+      <g stroke="#86a4c0" stroke-width="0.5" fill="none" opacity="0.35" stroke-linecap="round">
+        <path d="M 50 78 Q 52 84 50 90"/>
+        <path d="M 58 80 Q 60 86 58 92"/>
+        <path d="M 66 78 Q 68 84 66 90"/>
+        <path d="M 42 74 Q 44 80 42 86"/>
+        <path d="M 74 76 Q 76 82 74 88"/>
+      </g>
+      <!-- right wing (deeper blue feathers) -->
+      <path d="M 82 60 Q 96 72 91 92 Q 84 89 76 84 Q 79 72 82 60 Z" fill="#6f8eaa" opacity="0.8"/>
+      <path d="M 84 70 Q 90 80 88 90" stroke="#5a7596" stroke-width="1" fill="none" opacity="0.6"/>
+      <path d="M 87 76 Q 91 84 89 90" stroke="#5a7596" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <!-- head -->
+      <circle cx="60" cy="40" r="28" fill="url(#grad-blue-head)"/>
+      <!-- darker blue eye-area accents (blue parrotlet signature) -->
+      <ellipse cx="49" cy="38" rx="9" ry="6" fill="#88a4c0" opacity="0.4"/>
+      <ellipse cx="71" cy="38" rx="9" ry="6" fill="#88a4c0" opacity="0.4"/>
       <!-- cheek blush -->
-      <circle cx="40" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
-      <circle cx="80" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
-      <!-- eyes -->
-      <circle cx="50" cy="40" r="4.5" fill="#2d211a"/>
-      <circle cx="70" cy="40" r="4.5" fill="#2d211a"/>
-      <circle cx="51.8" cy="38.2" r="1.5" fill="#fff"/>
-      <circle cx="71.8" cy="38.2" r="1.5" fill="#fff"/>
-      <!-- beak -->
-      <path d="M 54 49 Q 60 56 66 49 Q 64 54 60 55 Q 56 54 54 49 Z" fill="#f4c890"/>
-      <path d="M 56 50 Q 60 53 64 50" stroke="#e0a878" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <circle cx="39" cy="48" r="5" fill="#f4b09a" opacity="0.4"/>
+      <circle cx="81" cy="48" r="5" fill="#f4b09a" opacity="0.4"/>
+      <!-- big soulful eyes -->
+      <circle cx="49" cy="42" r="5" fill="#2d211a"/>
+      <circle cx="71" cy="42" r="5" fill="#2d211a"/>
+      <circle cx="51" cy="40" r="1.8" fill="#fff"/>
+      <circle cx="73" cy="40" r="1.8" fill="#fff"/>
+      <circle cx="48" cy="44.5" r="0.6" fill="#fff" opacity="0.7"/>
+      <circle cx="70" cy="44.5" r="0.6" fill="#fff" opacity="0.7"/>
+      <!-- beak (peachy pink) -->
+      <path d="M 55 50 Q 60 58 65 50 Q 64 56 60 57 Q 56 56 55 50 Z" fill="#f0a890"/>
+      <path d="M 56 51 Q 60 55 64 51" stroke="#d88068" stroke-width="0.5" fill="none" opacity="0.45"/>
+      <!-- tiny yellow flower behind right ear (matches reference!) -->
+      <g transform="translate(90 30)">
+        <circle cx="0" cy="3" r="2.2" fill="#f8e0a0"/>
+        <circle cx="3.5" cy="0" r="2.2" fill="#f8e0a0"/>
+        <circle cx="-3" cy="-1" r="2" fill="#f4d878"/>
+        <circle cx="-1" cy="-4" r="2" fill="#f8e0a0"/>
+        <circle cx="3" cy="-4" r="2" fill="#f8e0a0"/>
+        <circle cx="0" cy="-1" r="1.2" fill="#e0a060"/>
+        <path d="M -4 6 Q -1 4 1 6" stroke="#9ab69a" stroke-width="1" fill="none" stroke-linecap="round"/>
+      </g>
       <!-- tiny feet -->
       <g stroke="#d4a058" stroke-width="1.8" stroke-linecap="round" fill="none">
         <path d="M 51 102 L 49 110"/>
