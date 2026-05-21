@@ -611,6 +611,71 @@
   .person-net.negative { color: var(--bad); background: var(--bad-soft); }
   .person-net.zero { color: var(--ink-mute); background: rgba(255, 255, 255, 0.5); }
 
+  /* per-person spending (with progress bar) */
+  .spending-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(160, 120, 90, 0.1);
+  }
+  .spending-row:last-child { border-bottom: none; }
+  .spending-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--peach) 0%, var(--peach-deep) 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-inset), 0 2px 6px rgba(232, 154, 118, 0.25);
+  }
+  .spending-avatar.c2 { background: linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%); box-shadow: var(--shadow-inset), 0 2px 6px rgba(143, 180, 201, 0.3); }
+  .spending-avatar.c3 { background: linear-gradient(135deg, var(--pink) 0%, #d4a8a3 100%); }
+  .spending-avatar.c4 { background: linear-gradient(135deg, #c5b89a 0%, #a89478 100%); }
+  .spending-avatar.c5 { background: linear-gradient(135deg, #a8c4a0 0%, #7ea378 100%); }
+  .spending-body { flex: 1; min-width: 0; }
+  .spending-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .spending-name { font-weight: 600; font-size: 14px; }
+  .spending-amount {
+    font-weight: 700; color: var(--ink); font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+  .spending-bar-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: var(--shadow-inset);
+  }
+  .spending-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--peach), var(--peach-deep));
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .spending-bar-fill.c2 { background: linear-gradient(90deg, var(--blue), var(--blue-deep)); }
+  .spending-bar-fill.c3 { background: linear-gradient(90deg, var(--pink), #d4a8a3); }
+  .spending-bar-fill.c4 { background: linear-gradient(90deg, #c5b89a, #a89478); }
+  .spending-bar-fill.c5 { background: linear-gradient(90deg, #a8c4a0, #7ea378); }
+  .spending-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+  }
+  .spending-meta .pct {
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
   /* settlement */
   .settle-row {
     display: flex;
@@ -1013,6 +1078,12 @@
     </div>
 
     <div class="stats-row" id="stats-row"></div>
+
+    <div class="card">
+      <h2>每人花費</h2>
+      <div class="text-small text-mute" style="margin-bottom:12px;">依分攤算的個人實際花費</div>
+      <div id="per-person-spending"></div>
+    </div>
 
     <div class="card">
       <h2>所有支出</h2>
@@ -1469,8 +1540,57 @@ const $$ = sel => document.querySelectorAll(sel);
 function renderAll() {
   renderHeader();
   renderExpenses();
+  renderPerPersonSpending();
   renderSummary();
   renderSettings();
+}
+
+function renderPerPersonSpending() {
+  const trip = getActiveTrip();
+  const container = $('#per-person-spending');
+  if (!container) return;
+  if (!trip || trip.members.length === 0) {
+    container.innerHTML = '<div class="text-mute text-small" style="text-align:center; padding: 20px 0;">還沒有成員</div>';
+    return;
+  }
+  if (trip.expenses.length === 0) {
+    container.innerHTML = '<div class="text-mute text-small" style="text-align:center; padding: 20px 0;">還沒有支出，新增後就會出現統計</div>';
+    return;
+  }
+
+  const { owed } = computeTotalsPerPerson();
+  const total = Object.values(owed).reduce((a, b) => a + b, 0);
+  const maxOwed = Math.max(...Object.values(owed), 1);
+
+  // sort by amount descending
+  const sorted = trip.members.map(m => ({ name: m, amount: owed[m] || 0 }))
+    .sort((a, b) => b.amount - a.amount);
+
+  container.innerHTML = sorted.map(({ name, amount }) => {
+    const pct = total > 0 ? (amount / total * 100) : 0;
+    const barPct = maxOwed > 0 ? (amount / maxOwed * 100) : 0;
+    const initial = name.charAt(0).toUpperCase();
+    const c = colorIndex(name);
+    const cClass = c > 1 ? 'c' + c : '';
+    return `
+      <div class="spending-row">
+        <div class="spending-avatar ${cClass}">${escapeHtml(initial)}</div>
+        <div class="spending-body">
+          <div class="spending-header">
+            <span class="spending-name">${escapeHtml(name)}</span>
+            <span class="spending-amount">${fmtKRW(amount)}</span>
+          </div>
+          <div class="spending-bar-track">
+            <div class="spending-bar-fill ${cClass}" style="width: ${barPct.toFixed(1)}%"></div>
+          </div>
+          <div class="spending-meta">
+            <span>${fmtTWD(amount)}</span>
+            <span class="pct">${pct.toFixed(0)}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderHeader() {
