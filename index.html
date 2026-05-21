@@ -2407,6 +2407,65 @@ async function preprocessImage(file) {
   });
 }
 
+// scale image and JPEG-encode to fit under maxSize (for OCR.space free tier 1MB limit)
+async function scaleImageForUpload(file, maxSizeBytes = 950_000) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let maxW = Math.min(img.naturalWidth, 1400);
+      let quality = 0.88;
+      const tryEncode = () => {
+        const w = Math.min(img.naturalWidth, maxW);
+        const h = Math.round(img.naturalHeight * w / img.naturalWidth);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          if (!blob) { reject(new Error('encode failed')); return; }
+          if (blob.size > maxSizeBytes && maxW > 600) {
+            maxW = Math.floor(maxW * 0.85);
+            quality = Math.max(0.7, quality - 0.05);
+            tryEncode();
+          } else {
+            resolve(blob);
+          }
+        }, 'image/jpeg', quality);
+      };
+      tryEncode();
+    };
+    img.onerror = () => reject(new Error('圖片載入失敗'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// OCR.space cloud API — Korean engine 2, much more accurate than Tesseract
+async function runOcrSpace(imageBlob) {
+  const apiKey = (window.localStorage.getItem('ocrspace-key') || 'helloworld').trim() || 'helloworld';
+  const formData = new FormData();
+  formData.append('apikey', apiKey);
+  formData.append('language', 'kor');
+  formData.append('isOverlayRequired', 'false');
+  formData.append('detectOrientation', 'true');
+  formData.append('scale', 'true');
+  formData.append('OCREngine', '2');
+  formData.append('file', imageBlob, 'receipt.jpg');
+
+  const res = await fetch('https://api.ocr.space/parse/image', {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.IsErroredOnProcessing) {
+    const msg = Array.isArray(data.ErrorMessage) ? data.ErrorMessage.join('; ') : (data.ErrorMessage || '雲端辨識錯誤');
+    throw new Error(msg);
+  }
+  const text = (data.ParsedResults && data.ParsedResults[0] && data.ParsedResults[0].ParsedText) || '';
+  return text;
+}
+
 function showOcrCandidates(candidates, selectedValue) {
   const el = $('#ocr-candidates');
   if (!candidates || candidates.length <= 1) {
@@ -2446,25 +2505,44 @@ async function runOcr(file) {
     $('#receipt-preview').classList.add('show');
   } catch (e) {}
 
+  let text = '';
+  let engineUsed = '';
+
   try {
     setOcrStatus('準備圖片中...', 'loading');
-    let imageForOcr = file;
-    try {
-      imageForOcr = await preprocessImage(file);
-    } catch (e) {
-      console.warn('preprocess failed, using original', e);
-    }
 
-    const worker = await getOcrWorker();
-    setOcrStatus('辨識中... 0%', 'loading');
-    const { data: { text } } = await worker.recognize(imageForOcr);
+    // try OCR.space cloud first (much better Korean accuracy)
+    try {
+      const scaled = await scaleImageForUpload(file);
+      setOcrStatus('☁️ 雲端辨識中（OCR.space 韓文引擎）...', 'loading');
+      text = await runOcrSpace(scaled);
+      if (text && text.trim().length > 0) {
+        engineUsed = 'cloud';
+      } else {
+        throw new Error('雲端沒讀到內容');
+      }
+    } catch (cloudErr) {
+      console.warn('OCR.space failed, falling back to Tesseract:', cloudErr);
+      setOcrStatus('雲端不穩，改用本機引擎...', 'loading');
+      try {
+        const preprocessed = await preprocessImage(file);
+        const worker = await getOcrWorker();
+        const { data } = await worker.recognize(preprocessed);
+        text = data.text || '';
+        engineUsed = 'local';
+      } catch (localErr) {
+        console.error('Tesseract also failed:', localErr);
+        throw localErr;
+      }
+    }
 
     const candidates = extractCandidates(text);
     if (candidates.length > 0) {
       const top = candidates[0].value;
       $('#exp-amount').value = top;
       updateAmountTWD();
-      setOcrStatus(`辨識結果：${fmtKRW(top)}（請確認）`, 'success');
+      const engineLabel = engineUsed === 'cloud' ? '☁️ 雲端' : '📱 本機';
+      setOcrStatus(`${engineLabel} 辨識：${fmtKRW(top)}（請確認）`, 'success');
       showOcrCandidates(candidates, top);
     } else {
       setOcrStatus('讀不到明確數字，直接打金額也很快 ✍️', 'error');
