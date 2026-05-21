@@ -1200,6 +1200,15 @@
   <!-- 設定 tab -->
   <div id="tab-settings" class="hidden">
     <div class="card">
+      <h2>我的所有旅遊</h2>
+      <div class="text-small text-mute" style="margin-bottom:12px;">
+        所有旅遊資料都會永久保留在這支手機，可以隨時切換。
+      </div>
+      <div id="all-trips-list"></div>
+      <button class="btn btn-primary" id="new-trip-from-settings" style="margin-top:12px;">+ 新建韓國旅遊</button>
+    </div>
+
+    <div class="card">
       <h2>目前旅遊</h2>
       <div class="field">
         <label>旅遊名稱</label>
@@ -1636,6 +1645,47 @@ function renderAll() {
   renderPerPersonSpending();
   renderSummary();
   renderSettings();
+  renderAllTripsList();
+}
+
+function renderAllTripsList() {
+  const container = $('#all-trips-list');
+  if (!container) return;
+  if (state.trips.length === 0) {
+    container.innerHTML = '<div class="text-mute text-small" style="text-align:center; padding: 12px;">還沒有旅遊</div>';
+    return;
+  }
+  const sorted = [...state.trips].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  container.innerHTML = sorted.map(t => {
+    const isActive = t.id === state.activeTripId;
+    const total = t.expenses.reduce((s, e) => s + e.amount, 0);
+    const dateText = fmtDateRange(t.startDate, t.endDate);
+    const meta = [
+      dateText,
+      `${t.expenses.length} 筆`,
+      total > 0 ? fmtKRW(total) : null,
+      `${t.members.length} 人`,
+    ].filter(Boolean).join(' · ');
+    return `
+      <div class="trip-list-item ${isActive ? 'active' : ''}" data-id="${t.id}">
+        <div class="trip-list-icon">${isActive ? '🇰🇷' : '🛫'}</div>
+        <div class="trip-list-body">
+          <div class="trip-list-name">${escapeHtml(t.name)}${isActive ? '<span class="pill" style="margin-left:8px; background: rgba(255,255,255,0.5);">使用中</span>' : ''}</div>
+          <div class="trip-list-meta">${escapeHtml(meta)}</div>
+        </div>
+        <div class="trip-list-arrow">${isActive ? '✓' : '›'}</div>
+      </div>
+    `;
+  }).join('');
+  container.querySelectorAll('.trip-list-item').forEach(el => {
+    el.addEventListener('click', () => {
+      if (el.dataset.id === state.activeTripId) return;
+      state.activeTripId = el.dataset.id;
+      save();
+      renderAll();
+      switchTab('expenses');
+    });
+  });
 }
 
 function renderPerPersonSpending() {
@@ -1826,7 +1876,7 @@ function renderSummary() {
         <div class="text-small">還沒有支出，先去新增吧 🌸</div>
       </div>`;
     } else {
-      settleEl.innerHTML = '<div class="settle-empty"><div class="settle-heart">💝</div>大家都打平了，不用結帳！</div>';
+      settleEl.innerHTML = '<div class="card-empty" style="padding: 20px 16px;"><div class="text-small text-mute">目前沒有需要結帳的項目</div></div>';
     }
     return;
   }
@@ -2445,6 +2495,7 @@ function init() {
   // settings — trip info
   $('#trip-save-btn').addEventListener('click', saveTripInfo);
   $('#trip-delete-btn').addEventListener('click', deleteCurrentTrip);
+  $('#new-trip-from-settings').addEventListener('click', openNewTripModal);
 
   // settings — members
   $('#add-member-btn').addEventListener('click', () => {
