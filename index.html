@@ -581,6 +581,41 @@
   .ocr-status.show { display: block; }
   .ocr-status.success { color: var(--good); background: var(--good-soft); }
   .ocr-status.error { color: var(--bad); background: var(--bad-soft); }
+  .ocr-candidates {
+    display: none;
+    margin-top: 8px;
+  }
+  .ocr-candidates.show { display: block; }
+  .ocr-candidates-label {
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+  }
+  .ocr-candidates-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ocr-candidate {
+    padding: 7px 12px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1.5px solid var(--glass-line);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    transition: all 0.15s;
+  }
+  .ocr-candidate.selected {
+    background: linear-gradient(135deg, var(--peach), var(--peach-deep));
+    color: #fff;
+    border-color: var(--peach-deep);
+    box-shadow: 0 3px 10px rgba(232, 154, 118, 0.35);
+  }
+  .ocr-candidate:active {
+    transform: scale(0.94);
+  }
   .spinner {
     display: inline-block;
     width: 12px; height: 12px;
@@ -1302,6 +1337,7 @@
       </button>
       <input type="file" id="ocr-file" accept="image/*" style="display:none">
       <div class="ocr-status" id="ocr-status"></div>
+      <div class="ocr-candidates" id="ocr-candidates"></div>
       <div class="receipt-preview" id="receipt-preview"><img id="receipt-preview-img" alt=""></div>
       <div class="text-small text-mute" id="exp-amount-twd" style="margin-top:8px;"></div>
     </div>
@@ -2111,6 +2147,8 @@ function openExpenseModal(id) {
   // reset OCR UI
   $('#ocr-status').className = 'ocr-status';
   $('#ocr-status').textContent = '';
+  $('#ocr-candidates').classList.remove('show');
+  $('#ocr-candidates').innerHTML = '';
   $('#receipt-preview').classList.remove('show');
   $('#ocr-btn-text').textContent = '拍發票或截圖辨識金額';
   $('#ocr-btn').classList.remove('loading');
@@ -2302,32 +2340,106 @@ function extractNumbers(s) {
     .filter(n => !isNaN(n) && n >= 10);
 }
 
-function extractAmount(text) {
-  if (!text) return null;
+// extract all plausible amounts with relevance scores, top one is best guess
+function extractCandidates(text) {
+  if (!text) return [];
   const lines = text.split(/[\r\n]+/);
-  const totalKeywords = ['합계', '합 계', '총합', '총액', '총금액', '결제금액', '결제', '소계', '합', '合計', '小計', '金額', 'TOTAL', 'Total', 'AMOUNT', 'Amount', '계'];
+  const totalKeywords = ['합계', '합 계', '총합', '총액', '총금액', '결제금액', '결제', '소계', '합', '合計', '小計', '金額', 'TOTAL', 'Total', 'AMOUNT', 'Amount', '계', '받을금액'];
+  const itemKeywords = ['수량', '단가', 'qty', '單價', '數量']; // these mean line item, not total
 
-  let bestKeywordHit = null;
-  for (const line of lines) {
-    for (const kw of totalKeywords) {
-      if (line.includes(kw)) {
-        const nums = extractNumbers(line);
-        const max = nums.length ? Math.max(...nums) : null;
-        if (max && (!bestKeywordHit || max > bestKeywordHit)) bestKeywordHit = max;
-      }
-    }
+  const scoreMap = new Map(); // value -> max score so far
+
+  function add(v, score) {
+    if (v < 100 || v > 100_000_000) return;
+    const existing = scoreMap.get(v);
+    if (!existing || existing < score) scoreMap.set(v, score);
   }
-  if (bestKeywordHit && bestKeywordHit >= 100) return bestKeywordHit;
 
-  const all = extractNumbers(text);
-  const reasonable = all.filter(n => n >= 500 && n < 10_000_000);
-  return reasonable.length ? Math.max(...reasonable) : null;
+  lines.forEach(line => {
+    const hasTotal = totalKeywords.some(kw => line.includes(kw));
+    const hasItem = itemKeywords.some(kw => line.includes(kw));
+    const nums = extractNumbers(line);
+    nums.forEach(n => {
+      let score = 1;
+      if (hasTotal) score += 100;
+      if (hasItem) score -= 10;
+      if (n >= 1000) score += 3;
+      if (n >= 10000) score += 5;
+      if (n >= 100000) score += 3;
+      if (n > 5_000_000) score -= 20; // unlikely (>50k TWD per receipt)
+      add(n, score);
+    });
+  });
+
+  return [...scoreMap.entries()]
+    .map(([value, score]) => ({ value, score }))
+    .sort((a, b) => b.score - a.score || b.value - a.value)
+    .slice(0, 8);
+}
+
+// preprocess image: scale down, grayscale, boost contrast — improves Tesseract accuracy
+async function preprocessImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const maxW = 1600;
+        const w = Math.min(img.naturalWidth, maxW);
+        const h = Math.round(img.naturalHeight * w / img.naturalWidth);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const c = Math.max(0, Math.min(255, (gray - 128) * 1.45 + 128));
+          d[i] = d[i + 1] = d[i + 2] = c;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('blob failed')), 'image/jpeg', 0.92);
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('圖片載入失敗'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function showOcrCandidates(candidates, selectedValue) {
+  const el = $('#ocr-candidates');
+  if (!candidates || candidates.length <= 1) {
+    el.classList.remove('show');
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `
+    <div class="ocr-candidates-label">不對嗎？從這些換一個 ↓</div>
+    <div class="ocr-candidates-row">
+      ${candidates.map(c => `<button class="ocr-candidate ${c.value === selectedValue ? 'selected' : ''}" data-value="${c.value}">${fmtKRW(c.value)}</button>`).join('')}
+    </div>
+  `;
+  el.classList.add('show');
+  el.querySelectorAll('.ocr-candidate').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = parseInt(btn.dataset.value, 10);
+      $('#exp-amount').value = v;
+      updateAmountTWD();
+      el.querySelectorAll('.ocr-candidate').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      setOcrStatus(`已套用：${fmtKRW(v)}`, 'success');
+    });
+  });
 }
 
 async function runOcr(file) {
   $('#ocr-btn').classList.add('loading');
   $('#ocr-btn-text').textContent = '辨識中...';
+  $('#ocr-candidates').classList.remove('show');
+  $('#ocr-candidates').innerHTML = '';
 
+  // show preview of original (not preprocessed) for clarity
   try {
     const url = URL.createObjectURL(file);
     $('#receipt-preview-img').src = url;
@@ -2335,20 +2447,31 @@ async function runOcr(file) {
   } catch (e) {}
 
   try {
+    setOcrStatus('準備圖片中...', 'loading');
+    let imageForOcr = file;
+    try {
+      imageForOcr = await preprocessImage(file);
+    } catch (e) {
+      console.warn('preprocess failed, using original', e);
+    }
+
     const worker = await getOcrWorker();
     setOcrStatus('辨識中... 0%', 'loading');
-    const { data: { text } } = await worker.recognize(file);
-    const amt = extractAmount(text);
-    if (amt) {
-      $('#exp-amount').value = amt;
-      setOcrStatus(`辨識結果：${fmtKRW(amt)}，請確認金額無誤`, 'success');
+    const { data: { text } } = await worker.recognize(imageForOcr);
+
+    const candidates = extractCandidates(text);
+    if (candidates.length > 0) {
+      const top = candidates[0].value;
+      $('#exp-amount').value = top;
       updateAmountTWD();
+      setOcrStatus(`辨識結果：${fmtKRW(top)}（請確認）`, 'success');
+      showOcrCandidates(candidates, top);
     } else {
-      setOcrStatus('沒讀到明確金額，請手動輸入', 'error');
+      setOcrStatus('讀不到明確數字，直接打金額也很快 ✍️', 'error');
     }
   } catch (err) {
     console.error(err);
-    setOcrStatus('辨識失敗：' + (err.message || '請手動輸入'), 'error');
+    setOcrStatus('辨識失敗了，直接輸入吧 ✍️', 'error');
   } finally {
     $('#ocr-btn').classList.remove('loading');
     $('#ocr-btn-text').textContent = '重新拍照辨識';
