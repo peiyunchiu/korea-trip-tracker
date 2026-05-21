@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="韓國記帳">
+<meta name="theme-color" content="#f4ad8e">
+<title>韓國旅遊記帳 한국 여행</title>
+<style>
+  :root {
+    --bg-1: #fce8db;
+    --bg-2: #fde0d4;
+    --bg-3: #e8dde0;
+    --bg-4: #d4dae8;
+    --ink: #4a3d33;
+    --ink-soft: #8b7a6b;
+    --ink-mute: #b0a094;
+    --peach: #f4ad8e;
+    --peach-deep: #e89a76;
+    --peach-soft: #fde0d4;
+    --blue: #8fb4c9;
+    --blue-deep: #6f9ab2;
+    --blue-soft: #d4e2ec;
+    --pink: #e9c5c0;
+    --pink-soft: #f5dad6;
+    --good: #5b9a7d;
+    --good-soft: #d9e8df;
+    --bad: #c87761;
+    --bad-soft: #f5dcd4;
+    --glass: rgba(255, 255, 255, 0.55);
+    --glass-strong: rgba(255, 255, 255, 0.78);
+    --glass-line: rgba(255, 255, 255, 0.6);
+    --shadow-soft: 0 8px 24px rgba(160, 120, 90, 0.12);
+    --shadow-lg: 0 14px 40px rgba(160, 120, 90, 0.18);
+    --shadow-inset: inset 0 1px 1px rgba(255, 255, 255, 0.7);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body {
+    background:
+      linear-gradient(180deg,
+        var(--bg-1) 0%,
+        var(--bg-2) 25%,
+        var(--bg-3) 60%,
+        var(--bg-4) 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  .decor {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .decor-1 { top: -120px; right: -100px; width: 380px; height: 380px; background: var(--peach); }
+  .decor-2 { bottom: -120px; left: -100px; width: 360px; height: 360px; background: var(--blue); }
+  .decor-3 { top: 45%; left: 30%; width: 260px; height: 260px; background: var(--pink); opacity: 0.4; }
+
+  /* 太平洋鸚鵡 mascot */
+  .parrot-icon {
+    display: inline-block;
+    width: 38px;
+    height: 41px;
+    flex-shrink: 0;
+  }
+  .parrot-header {
+    width: 44px;
+    height: 48px;
+    animation: parrot-bob 3.2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(160, 120, 90, 0.18));
+  }
+  .parrot-banner {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    width: 50px;
+    height: 54px;
+    transform: rotate(-8deg);
+    z-index: 2;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
+    animation: parrot-bob 3.6s ease-in-out infinite;
+  }
+  .parrot-floating {
+    position: fixed;
+    top: 38%;
+    right: 8%;
+    width: 60px;
+    height: 65px;
+    opacity: 0.32;
+    pointer-events: none;
+    z-index: 0;
+    animation: parrot-drift 7s ease-in-out infinite;
+  }
+  .parrot-floating-blue {
+    position: fixed;
+    top: 18%;
+    left: 6%;
+    width: 52px;
+    height: 56px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+    animation: parrot-drift-2 8.5s ease-in-out infinite;
+  }
+  .parrot-pair {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .parrot-pair .parrot-header {
+    width: 42px;
+    height: 46px;
+  }
+  .parrot-pair .parrot-header-second {
+    width: 38px;
+    height: 41px;
+    animation-delay: -1.6s;
+    margin-bottom: 4px;
+  }
+  @keyframes parrot-drift-2 {
+    0%, 100% { transform: translate(0, 0) rotate(-3deg); }
+    33% { transform: translate(14px, -10px) rotate(5deg); }
+    66% { transform: translate(-6px, -16px) rotate(-7deg); }
+  }
+  @keyframes parrot-bob {
+    0%, 100% { transform: translateY(0) rotate(-8deg); }
+    50% { transform: translateY(-4px) rotate(-8deg); }
+  }
+  .parrot-header { animation-name: parrot-bob-flat; }
+  @keyframes parrot-bob-flat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @keyframes parrot-drift {
+    0%, 100% { transform: translate(0, 0) rotate(4deg); }
+    33% { transform: translate(-12px, -8px) rotate(-2deg); }
+    66% { transform: translate(8px, -14px) rotate(6deg); }
+  }
+
+  button, input, select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+  button {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    background: none;
+  }
+  .app {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px 16px 110px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 12px 4px 18px;
+  }
+  .header-row {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px;
+  }
+  header h1 {
+    margin: 0; font-size: 22px; font-weight: 700;
+    color: var(--ink); letter-spacing: 0.3px;
+  }
+  .header-korean {
+    font-size: 12px;
+    color: var(--blue-deep);
+    margin-top: 2px;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .trip-switcher {
+    display: inline-flex; align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px 14px;
+    background: var(--glass-strong);
+    border: 1px solid var(--glass-line);
+    border-radius: 999px;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .trip-switcher .trip-name {
+    font-weight: 600; font-size: 14px;
+    color: var(--ink);
+    max-width: 180px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .trip-switcher .chev {
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .trip-dates {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+    margin-left: 4px;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-line);
+    border-radius: 16px;
+    padding: 4px;
+    margin-bottom: 16px;
+    position: sticky;
+    top: 8px;
+    z-index: 20;
+    box-shadow: var(--shadow-soft);
+  }
+  .tab {
+    flex: 1; padding: 12px 8px; text-align: center;
+    border-radius: 13px;
+    font-weight: 600; font-size: 15px;
+    color: rgba(74, 61, 51, 0.55);
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ink);
+    box-shadow: 0 2px 8px rgba(160, 120, 90, 0.12), var(--shadow-inset);
+  }
+
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-line);
+    border-radius: 22px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-soft), var(--shadow-inset);
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 16px; font-weight: 700;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2::before {
+    content: '';
+    width: 4px; height: 16px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--peach) 0%, var(--peach-deep) 100%);
+  }
+  .card-empty {
+    text-align: center;
+    padding: 36px 20px;
+    color: var(--ink-mute);
+    font-size: 14px;
+  }
+  .card-empty .big { font-size: 38px; margin-bottom: 8px; opacity: 0.6; }
+
+  .total-banner {
+    position: relative;
+    background:
+      linear-gradient(135deg, rgba(249, 197, 163, 0.92) 0%, rgba(236, 150, 112, 0.92) 100%);
+    color: #fff;
+    border-radius: 24px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 10px 30px rgba(232, 154, 118, 0.32), var(--shadow-inset);
+    overflow: hidden;
+  }
+  .total-banner::after {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    pointer-events: none;
+  }
+  .total-banner::before {
+    content: '';
+    position: absolute;
+    bottom: -30px; right: 60px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+  }
+  .total-banner .label {
+    font-size: 13px; opacity: 0.92; margin-bottom: 6px; letter-spacing: 0.3px;
+  }
+  .total-banner .amount {
+    font-size: 30px; font-weight: 700; letter-spacing: -0.5px;
+  }
+  .total-banner .twd {
+    font-size: 13px; opacity: 0.88; margin-top: 4px;
+  }
+  .total-banner .meta {
+    font-size: 12px; opacity: 0.82; margin-top: 10px;
+    position: relative; z-index: 1;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-cell {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-line);
+    border-radius: 18px;
+    padding: 14px 8px;
+    text-align: center;
+    box-shadow: var(--shadow-soft), var(--shadow-inset);
+  }
+  .stat-cell .num {
+    font-size: 18px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.3px;
+  }
+  .stat-cell .lbl {
+    font-size: 11px; color: var(--ink-mute);
+    margin-top: 4px;
+  }
+
+  /* form */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 14px; color: var(--ink-soft);
+    margin-bottom: 6px; font-weight: 500;
+  }
+  .field input[type="text"],
+  .field input[type="number"],
+  .field input[type="date"],
+  .field select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--ink);
+    font-size: 16px;
+    outline: none;
+    transition: all 0.15s;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--peach);
+    background: rgba(255, 255, 255, 0.9);
+  }
+  .field-row { display: flex; gap: 10px; }
+  .field-row > * { flex: 1; }
+
+  /* chip selector */
+  .chip-group {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .chip {
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 500;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    transition: all 0.15s;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .chip.selected {
+    background: linear-gradient(135deg, var(--peach) 0%, var(--peach-deep) 100%);
+    color: #fff;
+    border-color: var(--peach-deep);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(232, 154, 118, 0.35);
+  }
+  .chip-helper {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px;
+  }
+  .chip-helper-info { font-size: 12px; color: var(--ink-mute); }
+  .chip-helper button {
+    font-size: 13px; color: var(--peach-deep); font-weight: 600;
+    padding: 4px 8px;
+  }
+
+  /* quick-tag (Korean expense categories) */
+  .quick-tags {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .quick-tags::-webkit-scrollbar { display: none; }
+  .quick-tag {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid var(--glass-line);
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 500;
+    display: flex; align-items: center; gap: 4px;
+    backdrop-filter: blur(10px);
+  }
+  .quick-tag:active {
+    background: var(--peach-soft);
+    color: var(--ink);
+  }
+
+  /* buttons */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--peach) 0%, var(--peach-deep) 100%);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(232, 154, 118, 0.4), var(--shadow-inset);
+  }
+  .btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: 0 3px 10px rgba(232, 154, 118, 0.35);
+  }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--ink);
+    border: 1px solid var(--glass-line);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 12px;
+  }
+  .btn-danger {
+    background: rgba(245, 220, 212, 0.8);
+    color: var(--bad);
+    border: 1px solid rgba(200, 119, 97, 0.3);
+  }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row > * { flex: 1; }
+
+  .btn-ocr {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(212, 226, 236, 0.8), rgba(143, 180, 201, 0.85));
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 14px rgba(143, 180, 201, 0.35), var(--shadow-inset);
+    margin-top: 8px;
+  }
+  .btn-ocr:active { transform: translateY(1px); }
+  .btn-ocr.loading { opacity: 0.7; pointer-events: none; }
+  .ocr-status {
+    font-size: 12px;
+    color: var(--blue-deep);
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(212, 226, 236, 0.5);
+    border-radius: 10px;
+    display: none;
+  }
+  .ocr-status.show { display: block; }
+  .ocr-status.success { color: var(--good); background: var(--good-soft); }
+  .ocr-status.error { color: var(--bad); background: var(--bad-soft); }
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* expense list */
+  .expense-list { padding: 0; }
+  .expense-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(160, 120, 90, 0.1);
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .expense-item:last-child { border-bottom: none; }
+  .expense-item:active {
+    background: rgba(255, 255, 255, 0.3);
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 12px;
+  }
+  .expense-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--peach-soft) 0%, rgba(255,255,255,0.6) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-inset);
+  }
+  .expense-main { flex: 1; min-width: 0; }
+  .expense-title {
+    font-weight: 600; font-size: 15px;
+    color: var(--ink);
+    margin-bottom: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .expense-sub {
+    font-size: 12px; color: var(--ink-mute);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .expense-amount {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .expense-amount .krw {
+    font-weight: 700; color: var(--ink); font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+  .expense-amount .twd {
+    font-size: 11px; color: var(--ink-mute); margin-top: 2px;
+  }
+
+  .day-header {
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-weight: 600;
+    padding: 4px 0 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* summary */
+  .person-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(160, 120, 90, 0.1);
+  }
+  .person-row:last-child { border-bottom: none; }
+  .person-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--peach) 0%, var(--peach-deep) 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-inset), 0 3px 8px rgba(232, 154, 118, 0.25);
+  }
+  .person-avatar.c2 { background: linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%); box-shadow: var(--shadow-inset), 0 3px 8px rgba(143, 180, 201, 0.3); }
+  .person-avatar.c3 { background: linear-gradient(135deg, var(--pink) 0%, #d4a8a3 100%); box-shadow: var(--shadow-inset), 0 3px 8px rgba(218, 174, 168, 0.35); }
+  .person-avatar.c4 { background: linear-gradient(135deg, #c5b89a 0%, #a89478 100%); }
+  .person-avatar.c5 { background: linear-gradient(135deg, #a8c4a0 0%, #7ea378 100%); }
+  .person-info { flex: 1; margin-left: 12px; min-width: 0; }
+  .person-name {
+    font-weight: 600; font-size: 15px;
+  }
+  .person-detail {
+    font-size: 12px; color: var(--ink-mute);
+    margin-top: 2px;
+  }
+  .person-net {
+    font-weight: 700; font-size: 15px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    text-align: right;
+    min-width: 90px;
+  }
+  .person-net.positive { color: var(--good); background: var(--good-soft); }
+  .person-net.negative { color: var(--bad); background: var(--bad-soft); }
+  .person-net.zero { color: var(--ink-mute); background: rgba(255, 255, 255, 0.5); }
+
+  /* settlement */
+  .settle-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-line);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    gap: 10px;
+    box-shadow: var(--shadow-inset);
+  }
+  .settle-from { font-weight: 700; color: var(--bad); }
+  .settle-arrow { color: var(--ink-mute); font-size: 16px; }
+  .settle-to { font-weight: 700; color: var(--good); }
+  .settle-amount {
+    margin-left: auto;
+    text-align: right;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .settle-amount .twd {
+    font-size: 11px; color: var(--ink-mute); font-weight: 500;
+  }
+  .settle-empty {
+    background: var(--good-soft);
+    color: var(--good);
+    text-align: center;
+    padding: 24px;
+    border-radius: 14px;
+    font-weight: 600;
+  }
+
+  /* member tag */
+  .member-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .member-tag {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--glass-line);
+    border-radius: 999px;
+    padding: 6px 8px 6px 14px;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+  }
+  .member-tag .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--peach);
+  }
+  .member-tag .dot.c2 { background: var(--blue); }
+  .member-tag .dot.c3 { background: var(--pink); }
+  .member-tag .dot.c4 { background: #c5b89a; }
+  .member-tag .dot.c5 { background: #a8c4a0; }
+  .member-tag button {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(160, 120, 90, 0.2);
+    color: var(--ink);
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  /* trip list (in switcher) */
+  .trip-list-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--glass-line);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+  }
+  .trip-list-item.active {
+    background: linear-gradient(135deg, rgba(249, 197, 163, 0.7), rgba(236, 150, 112, 0.5));
+    border-color: var(--peach-deep);
+  }
+  .trip-list-item.active .trip-list-name { color: var(--ink); }
+  .trip-list-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--peach-soft), rgba(255,255,255,0.6));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .trip-list-item.active .trip-list-icon {
+    background: linear-gradient(135deg, #fff, var(--peach-soft));
+  }
+  .trip-list-body { flex: 1; min-width: 0; }
+  .trip-list-name {
+    font-weight: 600; font-size: 15px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .trip-list-meta {
+    font-size: 12px; color: var(--ink-mute);
+    margin-top: 2px;
+  }
+  .trip-list-arrow {
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(calc(min(50vw, 300px) - 76px));
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--peach) 0%, var(--peach-deep) 100%);
+    color: #fff;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 56px;
+    text-align: center;
+    box-shadow:
+      0 10px 28px rgba(232, 154, 118, 0.55),
+      inset 0 2px 2px rgba(255, 255, 255, 0.5);
+    z-index: 50;
+  }
+  .fab:active { transform: translateX(calc(min(50vw, 300px) - 76px)) translateY(2px); }
+
+  /* modal */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(74, 61, 51, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background:
+      linear-gradient(180deg,
+        rgba(252, 232, 219, 0.96) 0%,
+        rgba(253, 224, 212, 0.96) 100%);
+    backdrop-filter: blur(30px);
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    border-radius: 28px 28px 0 0;
+    padding: 22px 22px 36px;
+    overflow-y: auto;
+    animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 40px rgba(160, 120, 90, 0.2);
+  }
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: rgba(160, 120, 90, 0.25);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+  .modal-title {
+    font-size: 19px; font-weight: 700; color: var(--ink);
+  }
+  .modal-close {
+    color: var(--ink-soft);
+    font-size: 22px;
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .receipt-preview {
+    display: none;
+    margin-top: 10px;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    max-height: 200px;
+  }
+  .receipt-preview.show { display: block; }
+  .receipt-preview img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.6);
+    display: block;
+  }
+
+  .hidden { display: none !important; }
+  .text-mute { color: var(--ink-mute); }
+  .text-small { font-size: 13px; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--glass-line);
+    border-radius: 12px;
+  }
+  .checkbox-row input { width: 18px; height: 18px; accent-color: var(--peach-deep); }
+  .checkbox-row label { font-size: 14px; color: var(--ink); margin: 0; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="parrot" viewBox="0 0 120 130">
+      <!-- shadow -->
+      <ellipse cx="60" cy="120" rx="24" ry="3" fill="#000" opacity="0.06"/>
+      <!-- tail feathers -->
+      <path d="M 45 95 L 38 115 L 52 105 Z" fill="#7ba8c4"/>
+      <path d="M 75 95 L 82 115 L 68 105 Z" fill="#7ba8c4"/>
+      <path d="M 60 98 L 56 116 L 64 116 Z" fill="#8fb4c9"/>
+      <!-- body -->
+      <ellipse cx="60" cy="72" rx="32" ry="32" fill="#8fc8a0"/>
+      <!-- belly (lighter yellow-green) -->
+      <ellipse cx="56" cy="82" rx="22" ry="18" fill="#dce8a8"/>
+      <!-- left wing tuck -->
+      <path d="M 32 60 Q 28 75 36 88 Q 40 80 38 70 Z" fill="#7fb890" opacity="0.7"/>
+      <!-- right wing (signature blue) -->
+      <path d="M 80 56 Q 96 70 90 92 Q 84 88 76 84 Z" fill="#8fb4c9"/>
+      <path d="M 82 66 Q 90 78 88 90" stroke="#6f9ab2" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <path d="M 86 72 Q 92 80 90 88" stroke="#6f9ab2" stroke-width="1.2" fill="none" opacity="0.4"/>
+      <!-- head -->
+      <circle cx="60" cy="40" r="27" fill="#a0d4b0"/>
+      <!-- yellow forehead -->
+      <ellipse cx="60" cy="22" rx="15" ry="7" fill="#f4d878"/>
+      <!-- cheek blush -->
+      <circle cx="40" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
+      <circle cx="80" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
+      <!-- eyes -->
+      <circle cx="50" cy="40" r="4.5" fill="#2d211a"/>
+      <circle cx="70" cy="40" r="4.5" fill="#2d211a"/>
+      <circle cx="51.8" cy="38.2" r="1.5" fill="#fff"/>
+      <circle cx="71.8" cy="38.2" r="1.5" fill="#fff"/>
+      <!-- beak -->
+      <path d="M 54 49 Q 60 56 66 49 Q 64 54 60 55 Q 56 54 54 49 Z" fill="#f4c890"/>
+      <path d="M 56 50 Q 60 53 64 50" stroke="#e0a878" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <!-- tiny feet -->
+      <g stroke="#d4a058" stroke-width="1.8" stroke-linecap="round" fill="none">
+        <path d="M 51 102 L 49 110"/>
+        <path d="M 53 102 L 53 110"/>
+        <path d="M 55 102 L 57 110"/>
+        <path d="M 65 102 L 63 110"/>
+        <path d="M 67 102 L 67 110"/>
+        <path d="M 69 102 L 71 110"/>
+      </g>
+    </symbol>
+    <symbol id="parrot-blue" viewBox="0 0 120 130">
+      <!-- shadow -->
+      <ellipse cx="60" cy="120" rx="24" ry="3" fill="#000" opacity="0.06"/>
+      <!-- tail feathers (green-tinted, mirror of green parrot) -->
+      <path d="M 45 95 L 38 115 L 52 105 Z" fill="#7fb890"/>
+      <path d="M 75 95 L 82 115 L 68 105 Z" fill="#7fb890"/>
+      <path d="M 60 98 L 56 116 L 64 116 Z" fill="#8fc8a0"/>
+      <!-- body (soft sky blue) -->
+      <ellipse cx="60" cy="72" rx="32" ry="32" fill="#a8c8e0"/>
+      <!-- belly (lighter blue) -->
+      <ellipse cx="56" cy="82" rx="22" ry="18" fill="#dceaf4"/>
+      <!-- left wing tuck (deeper blue) -->
+      <path d="M 32 60 Q 28 75 36 88 Q 40 80 38 70 Z" fill="#8fb4c9" opacity="0.7"/>
+      <!-- right wing (green accent — flipped from green parrot) -->
+      <path d="M 80 56 Q 96 70 90 92 Q 84 88 76 84 Z" fill="#8fc8a0"/>
+      <path d="M 82 66 Q 90 78 88 90" stroke="#6fa078" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <path d="M 86 72 Q 92 80 90 88" stroke="#6fa078" stroke-width="1.2" fill="none" opacity="0.4"/>
+      <!-- head (light blue) -->
+      <circle cx="60" cy="40" r="27" fill="#bdd4e8"/>
+      <!-- yellow forehead -->
+      <ellipse cx="60" cy="22" rx="15" ry="7" fill="#f4d878"/>
+      <!-- cheek blush -->
+      <circle cx="40" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
+      <circle cx="80" cy="46" r="5.5" fill="#f4ad8e" opacity="0.45"/>
+      <!-- eyes -->
+      <circle cx="50" cy="40" r="4.5" fill="#2d211a"/>
+      <circle cx="70" cy="40" r="4.5" fill="#2d211a"/>
+      <circle cx="51.8" cy="38.2" r="1.5" fill="#fff"/>
+      <circle cx="71.8" cy="38.2" r="1.5" fill="#fff"/>
+      <!-- beak -->
+      <path d="M 54 49 Q 60 56 66 49 Q 64 54 60 55 Q 56 54 54 49 Z" fill="#f4c890"/>
+      <path d="M 56 50 Q 60 53 64 50" stroke="#e0a878" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <!-- tiny feet -->
+      <g stroke="#d4a058" stroke-width="1.8" stroke-linecap="round" fill="none">
+        <path d="M 51 102 L 49 110"/>
+        <path d="M 53 102 L 53 110"/>
+        <path d="M 55 102 L 57 110"/>
+        <path d="M 65 102 L 63 110"/>
+        <path d="M 67 102 L 67 110"/>
+        <path d="M 69 102 L 71 110"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="decor decor-1"></div>
+<div class="decor decor-2"></div>
+<div class="decor decor-3"></div>
+<svg class="parrot-floating" viewBox="0 0 120 130" aria-hidden="true"><use href="#parrot"/></svg>
+<svg class="parrot-floating-blue" viewBox="0 0 120 130" aria-hidden="true"><use href="#parrot-blue"/></svg>
+
+<div class="app">
+  <header>
+    <div class="header-row">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="parrot-pair" aria-label="太平洋鸚鵡吉祥物（綠＋藍）">
+          <svg class="parrot-icon parrot-header" viewBox="0 0 120 130"><use href="#parrot"/></svg>
+          <svg class="parrot-icon parrot-header parrot-header-second" viewBox="0 0 120 130"><use href="#parrot-blue"/></svg>
+        </div>
+        <div>
+          <h1>韓國旅遊記帳</h1>
+          <div class="header-korean">한국 여행 가계부</div>
+        </div>
+      </div>
+    </div>
+    <button class="trip-switcher" id="trip-switcher-btn">
+      <span class="trip-name" id="trip-name-display">—</span>
+      <span class="chev">▾</span>
+    </button>
+    <div class="trip-dates" id="trip-dates-display"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="expenses">支出</button>
+    <button class="tab" data-tab="summary">結算</button>
+    <button class="tab" data-tab="settings">設定</button>
+  </div>
+
+  <!-- 支出 tab -->
+  <div id="tab-expenses">
+    <div class="total-banner">
+      <svg class="parrot-banner" viewBox="0 0 120 130" aria-hidden="true"><use href="#parrot-blue"/></svg>
+      <div class="label">這趟旅遊總花費</div>
+      <div class="amount" id="total-krw">₩0</div>
+      <div class="twd" id="total-twd">≈ NT$ 0</div>
+      <div class="meta" id="total-meta">0 筆支出</div>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="card">
+      <h2>所有支出</h2>
+      <div id="expense-list-container"></div>
+    </div>
+  </div>
+
+  <!-- 結算 tab -->
+  <div id="tab-summary" class="hidden">
+    <div class="card">
+      <h2>每人狀況</h2>
+      <div id="person-summary"></div>
+    </div>
+    <div class="card">
+      <h2>結帳建議</h2>
+      <div class="text-small text-mute" style="margin-bottom:12px;">最少次數還清所有錢</div>
+      <div id="settlement-list"></div>
+    </div>
+  </div>
+
+  <!-- 設定 tab -->
+  <div id="tab-settings" class="hidden">
+    <div class="card">
+      <h2>目前旅遊</h2>
+      <div class="field">
+        <label>旅遊名稱</label>
+        <input type="text" id="trip-name-input" placeholder="例：首爾 2026.05">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>出發日（選填）</label>
+          <input type="date" id="trip-start-input">
+        </div>
+        <div class="field">
+          <label>回程日（選填）</label>
+          <input type="date" id="trip-end-input">
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="trip-save-btn">儲存旅遊資訊</button>
+      <div style="margin-top:10px;">
+        <button class="btn btn-danger" id="trip-delete-btn">刪除這趟旅遊</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>成員</h2>
+      <div class="text-small text-mute" style="margin-bottom:12px;">這趟旅遊有誰一起？可以隨時新增或移除。</div>
+      <div class="member-list" id="member-list"></div>
+      <div style="margin-top:14px;">
+        <div class="field-row">
+          <input type="text" id="new-member-input" placeholder="輸入成員名字" maxlength="20">
+          <button class="btn btn-secondary" id="add-member-btn" style="width:auto; padding: 12px 18px;">新增</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>匯率設定</h2>
+      <div class="field">
+        <label>1 KRW = ? TWD</label>
+        <input type="number" id="exchange-rate" step="0.0001" placeholder="0.023">
+        <div class="text-small text-mute" style="margin-top:6px;">用來估算台幣金額。常見約 0.023（即 1000 韓元 ≈ NT$23）</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>資料管理</h2>
+      <div class="text-small text-mute" style="margin-bottom:10px;">
+        匯出 = 把目前旅遊存成檔案傳給朋友；匯入 = 朋友的檔案會跟你的合併
+      </div>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn btn-secondary" id="export-btn">匯出</button>
+        <button class="btn btn-secondary" id="import-btn">匯入合併</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="card">
+      <h2>關於</h2>
+      <div class="text-small text-mute">
+        <p style="margin:0 0 8px;">資料只存在你這支手機，不會上傳雲端。</p>
+        <p style="margin:0 0 8px;">下一趟去韓國時，點旅遊名字旁的 ▾ → 「新建旅遊」即可，舊資料會保留。</p>
+        <p style="margin:0;">記得把這個頁面「加到主畫面」當 App 用。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" aria-label="新增支出">+</button>
+
+<!-- 新增/編輯支出 Modal -->
+<div class="modal-bg" id="expense-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="expense-modal-title">新增支出</div>
+      <button class="modal-close" id="expense-modal-close">×</button>
+    </div>
+
+    <div class="quick-tags" id="quick-tags"></div>
+
+    <div class="field">
+      <label>花了什麼？</label>
+      <input type="text" id="exp-desc" placeholder="例：明洞晚餐、計程車、樂天免稅店">
+    </div>
+
+    <div class="field">
+      <label>金額（KRW 韓元）</label>
+      <input type="number" id="exp-amount" inputmode="numeric" placeholder="0">
+      <button class="btn-ocr" id="ocr-btn">
+        <span>📸</span>
+        <span id="ocr-btn-text">拍發票或截圖辨識金額</span>
+      </button>
+      <input type="file" id="ocr-file" accept="image/*" style="display:none">
+      <div class="ocr-status" id="ocr-status"></div>
+      <div class="receipt-preview" id="receipt-preview"><img id="receipt-preview-img" alt=""></div>
+      <div class="text-small text-mute" id="exp-amount-twd" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="field">
+      <label>誰付錢的？</label>
+      <select id="exp-payer"></select>
+    </div>
+
+    <div class="field">
+      <label>分給誰？</label>
+      <div class="chip-group" id="exp-shared"></div>
+      <div class="chip-helper">
+        <div class="chip-helper-info" id="exp-shared-info">每人 ₩0</div>
+        <button id="exp-shared-all">全選 / 全清</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>日期</label>
+      <input type="date" id="exp-date">
+    </div>
+
+    <div class="btn-row" style="margin-top:22px;">
+      <button class="btn btn-ghost" id="exp-delete" style="display:none;">刪除</button>
+      <button class="btn btn-primary" id="exp-save">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 旅遊切換 Modal -->
+<div class="modal-bg" id="trip-switcher-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">我的韓國旅遊</div>
+      <button class="modal-close" id="trip-switcher-close">×</button>
+    </div>
+    <div id="trip-list-container"></div>
+    <button class="btn btn-primary" id="new-trip-btn" style="margin-top:14px;">+ 新建旅遊</button>
+  </div>
+</div>
+
+<!-- 新建旅遊 Modal -->
+<div class="modal-bg" id="new-trip-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">新建韓國旅遊</div>
+      <button class="modal-close" id="new-trip-close">×</button>
+    </div>
+
+    <div class="field">
+      <label>旅遊名稱</label>
+      <input type="text" id="new-trip-name" placeholder="例：首爾 2027.03 釜山行">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>出發日（選填）</label>
+        <input type="date" id="new-trip-start">
+      </div>
+      <div class="field">
+        <label>回程日（選填）</label>
+        <input type="date" id="new-trip-end">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>成員名單</label>
+      <input type="text" id="new-trip-members" placeholder="例：Chloe, Amy, Jason">
+      <div class="text-small text-mute" style="margin-top:6px;">
+        用逗號或空格分隔，之後也可以到「設定」再加。
+        <span id="copy-prev-link" style="color: var(--peach-deep); font-weight: 600; cursor: pointer; margin-left: 4px;">用上次旅遊的成員 →</span>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:18px;">
+      <button class="btn btn-ghost" id="new-trip-cancel">取消</button>
+      <button class="btn btn-primary" id="new-trip-create">建立</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============= Constants & State =============
+const STORAGE_KEY = 'chloe-trip-tracker-v3';
+const STORAGE_KEY_V2 = 'chloe-trip-tracker-v2';
+const STORAGE_KEY_V1 = 'chloe-trip-tracker-v1';
+const DEFAULT_RATE = 0.023;
+const DEFAULT_MEMBERS = ['Chloe', 'Wendy', 'Yulin'];
+
+const QUICK_TAGS = [
+  { emoji: '🍽️', label: '餐廳' },
+  { emoji: '☕', label: '咖啡' },
+  { emoji: '🍺', label: '酒' },
+  { emoji: '🚕', label: '計程車' },
+  { emoji: '🚇', label: '地鐵' },
+  { emoji: '🏨', label: '住宿' },
+  { emoji: '🛍️', label: '購物' },
+  { emoji: '🏪', label: '超商' },
+  { emoji: '🎫', label: '門票' },
+  { emoji: '💆', label: '汗蒸幕' },
+];
+
+const state = {
+  trips: [],
+  activeTripId: null,
+};
+
+let editingExpenseId = null;
+let modalShared = new Set();
+let tesseractWorker = null;
+
+function getActiveTrip() {
+  return state.trips.find(t => t.id === state.activeTripId);
+}
+
+function load() {
+  try {
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      state.trips = data.trips || [];
+      state.activeTripId = data.activeTripId || (state.trips[0]?.id || null);
+      return;
+    }
+    // migrate from v2
+    const v2raw = localStorage.getItem(STORAGE_KEY_V2);
+    if (v2raw) {
+      const v2 = JSON.parse(v2raw);
+      const trip = {
+        id: uid(),
+        name: v2.tripName || '首爾首場',
+        startDate: null,
+        endDate: null,
+        members: v2.members && v2.members.length ? v2.members : [...DEFAULT_MEMBERS],
+        expenses: (v2.expenses || []).map(e => ({
+          ...e,
+          modifiedAt: e.modifiedAt || e.createdAt || Date.now(),
+        })),
+        rate: v2.rate || DEFAULT_RATE,
+        createdAt: Date.now(),
+      };
+      state.trips = [trip];
+      state.activeTripId = trip.id;
+      save();
+      return;
+    }
+    // migrate from v1
+    const v1raw = localStorage.getItem(STORAGE_KEY_V1);
+    if (v1raw) {
+      const v1 = JSON.parse(v1raw);
+      const trip = {
+        id: uid(),
+        name: '首爾首場',
+        startDate: null,
+        endDate: null,
+        members: (v1.expenses || []).length === 0 ? [...DEFAULT_MEMBERS] : (v1.members || [...DEFAULT_MEMBERS]),
+        expenses: (v1.expenses || []).map(e => ({
+          ...e,
+          modifiedAt: e.modifiedAt || e.createdAt || Date.now(),
+        })),
+        rate: v1.rate || DEFAULT_RATE,
+        createdAt: Date.now(),
+      };
+      state.trips = [trip];
+      state.activeTripId = trip.id;
+      save();
+    }
+  } catch (e) {
+    console.warn('load failed', e);
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('save failed (storage may be blocked)', e);
+  }
+}
+
+function createTrip({ name, startDate, endDate, members, copyFromTripId }) {
+  const source = copyFromTripId ? state.trips.find(t => t.id === copyFromTripId) : null;
+  let finalMembers;
+  if (Array.isArray(members)) {
+    finalMembers = [...new Set(members.filter(Boolean))];
+  } else if (source) {
+    finalMembers = [...source.members];
+  } else {
+    finalMembers = [...DEFAULT_MEMBERS];
+  }
+  const trip = {
+    id: uid(),
+    name: name || generateDefaultTripName(),
+    startDate: startDate || null,
+    endDate: endDate || null,
+    members: finalMembers,
+    expenses: [],
+    rate: source ? source.rate : DEFAULT_RATE,
+    createdAt: Date.now(),
+  };
+  state.trips.push(trip);
+  state.activeTripId = trip.id;
+  save();
+  return trip;
+}
+
+function deleteTrip(tripId) {
+  state.trips = state.trips.filter(t => t.id !== tripId);
+  if (state.activeTripId === tripId) {
+    state.activeTripId = state.trips[0]?.id || null;
+  }
+  if (state.trips.length === 0) {
+    createTrip({ name: generateDefaultTripName() });
+  }
+  save();
+}
+
+function generateDefaultTripName() {
+  const d = new Date();
+  return `韓國 ${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// ============= Helpers =============
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function fmtKRW(n) {
+  return '₩' + Math.round(n).toLocaleString('en-US');
+}
+
+function fmtTWD(krw) {
+  const trip = getActiveTrip();
+  const rate = trip ? trip.rate : DEFAULT_RATE;
+  const twd = krw * rate;
+  if (twd >= 100) return 'NT$ ' + Math.round(twd).toLocaleString('en-US');
+  if (twd >= 10) return 'NT$ ' + twd.toFixed(1);
+  return 'NT$ ' + twd.toFixed(2);
+}
+
+function todayISO() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+
+function fmtDateShort(iso) {
+  if (!iso) return '';
+  const [, m, d] = iso.split('-');
+  return `${parseInt(m)}/${parseInt(d)}`;
+}
+
+function fmtDateRange(start, end) {
+  if (!start && !end) return '';
+  if (start && end) return `${fmtDateShort(start)} – ${fmtDateShort(end)}`;
+  return fmtDateShort(start || end);
+}
+
+function colorIndex(name) {
+  const trip = getActiveTrip();
+  if (!trip) return 1;
+  const idx = trip.members.indexOf(name);
+  return ((idx % 5) + 1);
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// ============= Computation =============
+function computeBalances() {
+  const trip = getActiveTrip();
+  if (!trip) return {};
+  const balance = {};
+  trip.members.forEach(m => balance[m] = 0);
+  trip.expenses.forEach(exp => {
+    if (!balance.hasOwnProperty(exp.payer)) balance[exp.payer] = 0;
+    balance[exp.payer] += exp.amount;
+    const share = exp.amount / exp.sharedBy.length;
+    exp.sharedBy.forEach(m => {
+      if (!balance.hasOwnProperty(m)) balance[m] = 0;
+      balance[m] -= share;
+    });
+  });
+  return balance;
+}
+
+function computeTotalsPerPerson() {
+  const trip = getActiveTrip();
+  if (!trip) return { paid: {}, owed: {} };
+  const paid = {};
+  const owed = {};
+  trip.members.forEach(m => { paid[m] = 0; owed[m] = 0; });
+  trip.expenses.forEach(exp => {
+    if (!paid.hasOwnProperty(exp.payer)) paid[exp.payer] = 0;
+    paid[exp.payer] += exp.amount;
+    const share = exp.amount / exp.sharedBy.length;
+    exp.sharedBy.forEach(m => {
+      if (!owed.hasOwnProperty(m)) owed[m] = 0;
+      owed[m] += share;
+    });
+  });
+  return { paid, owed };
+}
+
+function computeSettlement(balance) {
+  const creditors = [];
+  const debtors = [];
+  Object.entries(balance).forEach(([name, v]) => {
+    if (v > 1) creditors.push({ name, amount: v });
+    else if (v < -1) debtors.push({ name, amount: -v });
+  });
+  creditors.sort((a, b) => b.amount - a.amount);
+  debtors.sort((a, b) => b.amount - a.amount);
+  const txns = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const pay = Math.min(debtors[i].amount, creditors[j].amount);
+    if (pay > 1) txns.push({ from: debtors[i].name, to: creditors[j].name, amount: pay });
+    debtors[i].amount -= pay;
+    creditors[j].amount -= pay;
+    if (debtors[i].amount < 1) i++;
+    if (creditors[j].amount < 1) j++;
+  }
+  return txns;
+}
+
+// ============= Render =============
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function renderAll() {
+  renderHeader();
+  renderExpenses();
+  renderSummary();
+  renderSettings();
+}
+
+function renderHeader() {
+  const trip = getActiveTrip();
+  $('#trip-name-display').textContent = trip ? trip.name : '—';
+  $('#trip-dates-display').textContent = trip ? fmtDateRange(trip.startDate, trip.endDate) : '';
+}
+
+function renderExpenses() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const members = trip.members;
+  const expenses = trip.expenses;
+
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  $('#total-krw').textContent = fmtKRW(total);
+  $('#total-twd').textContent = '≈ ' + fmtTWD(total);
+  $('#total-meta').textContent = `${expenses.length} 筆 · ${members.length} 人 · 平均每人 ${members.length ? fmtKRW(total / members.length) : '₩0'}`;
+
+  const totalCount = expenses.length;
+  const avg = members.length ? total / members.length : 0;
+  const days = new Set(expenses.map(e => e.date)).size;
+  $('#stats-row').innerHTML = `
+    <div class="stat-cell"><div class="num">${totalCount}</div><div class="lbl">筆支出</div></div>
+    <div class="stat-cell"><div class="num">${days}</div><div class="lbl">天有花錢</div></div>
+    <div class="stat-cell"><div class="num">${fmtKRW(avg)}</div><div class="lbl">人均花費</div></div>
+  `;
+
+  const container = $('#expense-list-container');
+  if (expenses.length === 0) {
+    container.innerHTML = `
+      <div class="card-empty">
+        <div class="big">🧾</div>
+        <div>還沒有支出紀錄</div>
+        <div class="text-small" style="margin-top:6px;">點下方 + 新增第一筆</div>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...expenses].sort((a, b) => {
+    if (b.date !== a.date) return (b.date || '').localeCompare(a.date || '');
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  let html = '<div class="expense-list">';
+  let lastDate = null;
+  sorted.forEach(exp => {
+    if (exp.date !== lastDate) {
+      html += `<div class="day-header">${fmtDateShort(exp.date) || '無日期'}</div>`;
+      lastDate = exp.date;
+    }
+    const sharedText = exp.sharedBy.length === members.length && members.length > 0
+      ? '全員' : exp.sharedBy.join('、');
+    html += `
+      <div class="expense-item" data-id="${exp.id}">
+        <div class="expense-icon">${pickIcon(exp.description)}</div>
+        <div class="expense-main">
+          <div class="expense-title">${escapeHtml(exp.description || '（無描述）')}</div>
+          <div class="expense-sub">${escapeHtml(exp.payer)} 付 · 分給 ${escapeHtml(sharedText)}</div>
+        </div>
+        <div class="expense-amount">
+          <div class="krw">${fmtKRW(exp.amount)}</div>
+          <div class="twd">${fmtTWD(exp.amount)}</div>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  $$('#expense-list-container .expense-item').forEach(el => {
+    el.addEventListener('click', () => openExpenseModal(el.dataset.id));
+  });
+}
+
+function pickIcon(desc) {
+  const d = (desc || '').toLowerCase();
+  if (/餐廳|餐|飯|吃|早|午|晚|food|meal|breakfast|lunch|dinner|烤肉|拉麵|宵夜|식당|밥/.test(d)) return '🍽️';
+  if (/咖啡|甜點|蛋糕|coffee|cafe|dessert|奶茶|飲料|커피|카페/.test(d)) return '☕';
+  if (/酒|啤酒|燒酒|beer|wine|麥酒|소주|맥주|술집/.test(d)) return '🍺';
+  if (/計程車|車|taxi|uber|kakao|택시/.test(d)) return '🚕';
+  if (/地鐵|捷運|公車|地下鉄|지하철|버스/.test(d)) return '🚇';
+  if (/住宿|飯店|hotel|airbnb|民宿|旅館|호텔|숙소/.test(d)) return '🏨';
+  if (/機票|航空|flight|airline/.test(d)) return '✈️';
+  if (/門票|景點|遊樂|ticket|entrance|樂園|입장/.test(d)) return '🎫';
+  if (/購物|買|shop|商|店|免稅|outlet|쇼핑/.test(d)) return '🛍️';
+  if (/超商|超市|便利商|mart|seven|gs25|cu|편의점/.test(d)) return '🏪';
+  if (/汗蒸幕|spa|按摩|찜질방/.test(d)) return '💆';
+  return '💳';
+}
+
+function renderSummary() {
+  const trip = getActiveTrip();
+  const personEl = $('#person-summary');
+  if (!trip || trip.members.length === 0) {
+    personEl.innerHTML = '<div class="card-empty"><div class="big">👥</div><div>還沒有成員</div><div class="text-small" style="margin-top:6px;">先到「設定」加成員</div></div>';
+    $('#settlement-list').innerHTML = '';
+    return;
+  }
+
+  const balance = computeBalances();
+  const { paid, owed } = computeTotalsPerPerson();
+
+  personEl.innerHTML = trip.members.map(m => {
+    const net = balance[m] || 0;
+    const cls = net > 1 ? 'positive' : net < -1 ? 'negative' : 'zero';
+    const sign = net > 1 ? '+' : net < -1 ? '-' : '';
+    const display = `${sign}${fmtKRW(Math.abs(net))}`;
+    const initial = m.charAt(0).toUpperCase();
+    const c = colorIndex(m);
+    return `
+      <div class="person-row">
+        <div class="person-avatar ${c > 1 ? 'c' + c : ''}">${escapeHtml(initial)}</div>
+        <div class="person-info">
+          <div class="person-name">${escapeHtml(m)}</div>
+          <div class="person-detail">付了 ${fmtKRW(paid[m] || 0)} · 該付 ${fmtKRW(owed[m] || 0)}</div>
+        </div>
+        <div class="person-net ${cls}">${display}</div>
+      </div>
+    `;
+  }).join('');
+
+  const txns = computeSettlement(balance);
+  const settleEl = $('#settlement-list');
+  if (txns.length === 0) {
+    if (trip.expenses.length === 0) {
+      settleEl.innerHTML = '<div class="card-empty"><div class="big">💸</div><div>還沒有支出，先去新增吧</div></div>';
+    } else {
+      settleEl.innerHTML = '<div class="settle-empty">✓ 大家都打平了，不用結帳！</div>';
+    }
+    return;
+  }
+
+  settleEl.innerHTML = txns.map(t => `
+    <div class="settle-row">
+      <span class="settle-from">${escapeHtml(t.from)}</span>
+      <span class="settle-arrow">→</span>
+      <span class="settle-to">${escapeHtml(t.to)}</span>
+      <div class="settle-amount">
+        <div>${fmtKRW(t.amount)}</div>
+        <div class="twd">${fmtTWD(t.amount)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSettings() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+
+  // trip info
+  $('#trip-name-input').value = trip.name;
+  $('#trip-start-input').value = trip.startDate || '';
+  $('#trip-end-input').value = trip.endDate || '';
+
+  // members
+  const memberList = $('#member-list');
+  if (trip.members.length === 0) {
+    memberList.innerHTML = '<div class="text-mute text-small">還沒有成員</div>';
+  } else {
+    memberList.innerHTML = trip.members.map(m => {
+      const c = colorIndex(m);
+      return `
+        <div class="member-tag">
+          <span class="dot ${c > 1 ? 'c' + c : ''}"></span>
+          ${escapeHtml(m)}
+          <button data-name="${escapeHtml(m)}" aria-label="刪除">×</button>
+        </div>
+      `;
+    }).join('');
+    memberList.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => removeMember(btn.dataset.name));
+    });
+  }
+  $('#exchange-rate').value = trip.rate;
+}
+
+// ============= Member management =============
+function addMember(name) {
+  name = (name || '').trim();
+  if (!name) return;
+  const trip = getActiveTrip();
+  if (!trip) return;
+  if (trip.members.includes(name)) {
+    alert(`已經有「${name}」這位成員了`);
+    return;
+  }
+  trip.members.push(name);
+  save(); renderAll();
+}
+
+function removeMember(name) {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const used = trip.expenses.some(e => e.payer === name || e.sharedBy.includes(name));
+  let msg = `要移除「${name}」嗎？`;
+  if (used) msg += '\n\n注意：已有支出紀錄包含這位成員，移除後紀錄會保留但結算會少算。';
+  if (!confirm(msg)) return;
+  trip.members = trip.members.filter(m => m !== name);
+  save(); renderAll();
+}
+
+// ============= Tabs =============
+function switchTab(name) {
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  ['expenses', 'summary', 'settings'].forEach(t => {
+    $('#tab-' + t).classList.toggle('hidden', t !== name);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============= Trip Switcher =============
+function openTripSwitcher() {
+  renderTripList();
+  $('#trip-switcher-modal').classList.add('open');
+}
+
+function closeTripSwitcher() {
+  $('#trip-switcher-modal').classList.remove('open');
+}
+
+function renderTripList() {
+  const container = $('#trip-list-container');
+  if (state.trips.length === 0) {
+    container.innerHTML = '<div class="card-empty">還沒有旅遊</div>';
+    return;
+  }
+  const sorted = [...state.trips].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  container.innerHTML = sorted.map(t => {
+    const isActive = t.id === state.activeTripId;
+    const total = t.expenses.reduce((s, e) => s + e.amount, 0);
+    const dateText = fmtDateRange(t.startDate, t.endDate);
+    const meta = [
+      dateText,
+      `${t.expenses.length} 筆`,
+      fmtKRW(total),
+    ].filter(Boolean).join(' · ');
+    return `
+      <div class="trip-list-item ${isActive ? 'active' : ''}" data-id="${t.id}">
+        <div class="trip-list-icon">${isActive ? '🇰🇷' : '🛫'}</div>
+        <div class="trip-list-body">
+          <div class="trip-list-name">${escapeHtml(t.name)}</div>
+          <div class="trip-list-meta">${escapeHtml(meta)}</div>
+        </div>
+        <div class="trip-list-arrow">${isActive ? '✓' : '›'}</div>
+      </div>
+    `;
+  }).join('');
+  container.querySelectorAll('.trip-list-item').forEach(el => {
+    el.addEventListener('click', () => {
+      state.activeTripId = el.dataset.id;
+      save();
+      renderAll();
+      closeTripSwitcher();
+    });
+  });
+}
+
+function openNewTripModal() {
+  $('#new-trip-name').value = generateDefaultTripName();
+  $('#new-trip-start').value = '';
+  $('#new-trip-end').value = '';
+  $('#new-trip-members').value = '';
+
+  // hook up "use previous members" link
+  const prevTrip = getActiveTrip();
+  const link = $('#copy-prev-link');
+  if (prevTrip && prevTrip.members.length > 0) {
+    link.style.display = 'inline';
+    link.textContent = `用上次的成員（${prevTrip.members.join(', ')}）`;
+    link.onclick = () => {
+      $('#new-trip-members').value = prevTrip.members.join(', ');
+    };
+  } else {
+    link.style.display = 'none';
+  }
+
+  $('#new-trip-modal').classList.add('open');
+  setTimeout(() => $('#new-trip-name').focus(), 100);
+}
+
+function closeNewTripModal() {
+  $('#new-trip-modal').classList.remove('open');
+}
+
+function createNewTrip() {
+  const name = $('#new-trip-name').value.trim() || generateDefaultTripName();
+  const startDate = $('#new-trip-start').value || null;
+  const endDate = $('#new-trip-end').value || null;
+  const membersRaw = $('#new-trip-members').value.trim();
+  const members = membersRaw
+    ? membersRaw.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean)
+    : [];
+
+  if (members.length === 0) {
+    if (!confirm('還沒填成員。建立後請到「設定」加入成員，要繼續嗎？')) return;
+  }
+
+  createTrip({
+    name,
+    startDate,
+    endDate,
+    members,
+  });
+  closeNewTripModal();
+  closeTripSwitcher();
+  renderAll();
+  switchTab('expenses');
+}
+
+function saveTripInfo() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const name = $('#trip-name-input').value.trim();
+  if (!name) { alert('旅遊名稱不能空白'); return; }
+  trip.name = name;
+  trip.startDate = $('#trip-start-input').value || null;
+  trip.endDate = $('#trip-end-input').value || null;
+  save(); renderAll();
+  alert('已儲存');
+}
+
+function deleteCurrentTrip() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  if (!confirm(`要刪除「${trip.name}」嗎？\n\n這趟所有支出紀錄都會消失，無法復原。`)) return;
+  if (!confirm('再確認一次：真的要刪除？')) return;
+  deleteTrip(trip.id);
+  renderAll();
+  alert('已刪除');
+}
+
+// ============= Expense Modal =============
+function openExpenseModal(id) {
+  const trip = getActiveTrip();
+  if (!trip || trip.members.length === 0) {
+    alert('請先到「設定」加入成員');
+    switchTab('settings');
+    return;
+  }
+
+  editingExpenseId = id || null;
+  const exp = id ? trip.expenses.find(e => e.id === id) : null;
+
+  $('#expense-modal-title').textContent = exp ? '編輯支出' : '新增支出';
+  $('#exp-desc').value = exp ? exp.description : '';
+  $('#exp-amount').value = exp ? exp.amount : '';
+  $('#exp-date').value = exp ? exp.date : todayISO();
+
+  // payer select
+  const payerSel = $('#exp-payer');
+  payerSel.innerHTML = trip.members.map(m =>
+    `<option value="${escapeHtml(m)}" ${exp && exp.payer === m ? 'selected' : ''}>${escapeHtml(m)}</option>`
+  ).join('');
+  if (!exp && trip.members.length > 0) payerSel.value = trip.members[0];
+
+  modalShared = new Set(exp ? exp.sharedBy : trip.members);
+  renderSharedChips();
+  renderQuickTags();
+
+  // reset OCR UI
+  $('#ocr-status').className = 'ocr-status';
+  $('#ocr-status').textContent = '';
+  $('#receipt-preview').classList.remove('show');
+  $('#ocr-btn-text').textContent = '拍發票或截圖辨識金額';
+  $('#ocr-btn').classList.remove('loading');
+
+  $('#exp-delete').style.display = exp ? 'block' : 'none';
+  $('#expense-modal').classList.add('open');
+  updateAmountTWD();
+
+  setTimeout(() => $('#exp-desc').focus(), 100);
+}
+
+function renderQuickTags() {
+  $('#quick-tags').innerHTML = QUICK_TAGS.map(t => `
+    <button class="quick-tag" data-label="${escapeHtml(t.label)}">
+      <span>${t.emoji}</span>
+      <span>${escapeHtml(t.label)}</span>
+    </button>
+  `).join('');
+  $$('#quick-tags .quick-tag').forEach(el => {
+    el.addEventListener('click', () => {
+      const desc = $('#exp-desc');
+      if (!desc.value.trim()) {
+        desc.value = el.dataset.label;
+      } else {
+        desc.value = el.dataset.label + ' · ' + desc.value;
+      }
+    });
+  });
+}
+
+function renderSharedChips() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const el = $('#exp-shared');
+  el.innerHTML = trip.members.map(m => `
+    <button class="chip ${modalShared.has(m) ? 'selected' : ''}" data-name="${escapeHtml(m)}">${escapeHtml(m)}</button>
+  `).join('');
+  el.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      const n = c.dataset.name;
+      if (modalShared.has(n)) modalShared.delete(n);
+      else modalShared.add(n);
+      renderSharedChips();
+      updateAmountTWD();
+    });
+  });
+  updateAmountTWD();
+}
+
+function updateAmountTWD() {
+  const amt = parseFloat($('#exp-amount').value) || 0;
+  const n = modalShared.size || 1;
+  const each = amt / n;
+  $('#exp-amount-twd').textContent = amt > 0 ? `≈ ${fmtTWD(amt)}` : '';
+  if (modalShared.size > 0 && amt > 0) {
+    $('#exp-shared-info').textContent = `每人 ${fmtKRW(each)} (${fmtTWD(each)})`;
+  } else if (modalShared.size === 0) {
+    $('#exp-shared-info').textContent = '至少要選一個人';
+  } else {
+    $('#exp-shared-info').textContent = `平均分給 ${modalShared.size} 人`;
+  }
+}
+
+function closeExpenseModal() {
+  $('#expense-modal').classList.remove('open');
+  editingExpenseId = null;
+}
+
+function saveExpense() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const desc = $('#exp-desc').value.trim();
+  const amount = parseFloat($('#exp-amount').value);
+  const payer = $('#exp-payer').value;
+  const date = $('#exp-date').value || todayISO();
+  const sharedBy = Array.from(modalShared);
+
+  if (!amount || amount <= 0) { alert('請輸入金額'); $('#exp-amount').focus(); return; }
+  if (!payer) { alert('請選擇付錢的人'); return; }
+  if (sharedBy.length === 0) { alert('至少要選一個分攤的人'); return; }
+
+  const now = Date.now();
+  if (editingExpenseId) {
+    const exp = trip.expenses.find(e => e.id === editingExpenseId);
+    if (exp) {
+      exp.description = desc;
+      exp.amount = amount;
+      exp.payer = payer;
+      exp.date = date;
+      exp.sharedBy = sharedBy;
+      exp.modifiedAt = now;
+    }
+  } else {
+    trip.expenses.push({
+      id: uid(),
+      description: desc,
+      amount,
+      payer,
+      date,
+      sharedBy,
+      createdAt: now,
+      modifiedAt: now,
+    });
+  }
+  save(); renderAll();
+  closeExpenseModal();
+}
+
+function deleteExpense() {
+  const trip = getActiveTrip();
+  if (!trip || !editingExpenseId) return;
+  if (!confirm('確定要刪除這筆支出嗎？')) return;
+  trip.expenses = trip.expenses.filter(e => e.id !== editingExpenseId);
+  save(); renderAll();
+  closeExpenseModal();
+}
+
+// ============= OCR =============
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('載入失敗：' + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function getOcrWorker() {
+  if (tesseractWorker) return tesseractWorker;
+  if (!window.Tesseract) {
+    setOcrStatus('載入辨識引擎...', 'loading');
+    await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+  }
+  setOcrStatus('下載韓文辨識模型（首次需要 10-20 秒）...', 'loading');
+  tesseractWorker = await Tesseract.createWorker(['kor', 'eng'], 1, {
+    logger: (m) => {
+      if (m.status === 'recognizing text') {
+        const pct = Math.round((m.progress || 0) * 100);
+        setOcrStatus(`辨識中... ${pct}%`, 'loading');
+      } else if (m.status && m.status.includes('loading')) {
+        setOcrStatus('下載辨識模型中... ' + Math.round((m.progress || 0) * 100) + '%', 'loading');
+      }
+    },
+  });
+  return tesseractWorker;
+}
+
+function setOcrStatus(text, type) {
+  const el = $('#ocr-status');
+  el.className = 'ocr-status show ' + (type || '');
+  el.innerHTML = type === 'loading'
+    ? `<span class="spinner" style="vertical-align:middle; margin-right:6px; border-top-color: var(--blue-deep);"></span>${escapeHtml(text)}`
+    : escapeHtml(text);
+}
+
+function extractNumbers(s) {
+  const matches = s.match(/[\d][\d,]{1,}/g) || [];
+  return matches
+    .map(x => parseInt(x.replace(/,/g, ''), 10))
+    .filter(n => !isNaN(n) && n >= 10);
+}
+
+function extractAmount(text) {
+  if (!text) return null;
+  const lines = text.split(/[\r\n]+/);
+  const totalKeywords = ['합계', '합 계', '총합', '총액', '총금액', '결제금액', '결제', '소계', '합', '合計', '小計', '金額', 'TOTAL', 'Total', 'AMOUNT', 'Amount', '계'];
+
+  let bestKeywordHit = null;
+  for (const line of lines) {
+    for (const kw of totalKeywords) {
+      if (line.includes(kw)) {
+        const nums = extractNumbers(line);
+        const max = nums.length ? Math.max(...nums) : null;
+        if (max && (!bestKeywordHit || max > bestKeywordHit)) bestKeywordHit = max;
+      }
+    }
+  }
+  if (bestKeywordHit && bestKeywordHit >= 100) return bestKeywordHit;
+
+  const all = extractNumbers(text);
+  const reasonable = all.filter(n => n >= 500 && n < 10_000_000);
+  return reasonable.length ? Math.max(...reasonable) : null;
+}
+
+async function runOcr(file) {
+  $('#ocr-btn').classList.add('loading');
+  $('#ocr-btn-text').textContent = '辨識中...';
+
+  try {
+    const url = URL.createObjectURL(file);
+    $('#receipt-preview-img').src = url;
+    $('#receipt-preview').classList.add('show');
+  } catch (e) {}
+
+  try {
+    const worker = await getOcrWorker();
+    setOcrStatus('辨識中... 0%', 'loading');
+    const { data: { text } } = await worker.recognize(file);
+    const amt = extractAmount(text);
+    if (amt) {
+      $('#exp-amount').value = amt;
+      setOcrStatus(`辨識結果：${fmtKRW(amt)}，請確認金額無誤`, 'success');
+      updateAmountTWD();
+    } else {
+      setOcrStatus('沒讀到明確金額，請手動輸入', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    setOcrStatus('辨識失敗：' + (err.message || '請手動輸入'), 'error');
+  } finally {
+    $('#ocr-btn').classList.remove('loading');
+    $('#ocr-btn-text').textContent = '重新拍照辨識';
+  }
+}
+
+// ============= Import / Export =============
+function exportData() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const data = JSON.stringify(trip, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  const safeName = trip.name.replace(/[^\w一-龥.-]/g, '_');
+  a.href = url;
+  a.download = `${safeName}-${stamp}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function mergeImport(data) {
+  const trip = getActiveTrip();
+  if (!trip) return { addedExpenses: 0, updatedExpenses: 0, addedMembers: 0 };
+
+  let addedExpenses = 0;
+  let updatedExpenses = 0;
+  let addedMembers = 0;
+
+  (data.members || []).forEach(m => {
+    if (!trip.members.includes(m)) {
+      trip.members.push(m);
+      addedMembers++;
+    }
+  });
+
+  const localById = new Map(trip.expenses.map(e => [e.id, e]));
+  (data.expenses || []).forEach(e => {
+    if (!e.id) return;
+    const existing = localById.get(e.id);
+    if (!existing) {
+      trip.expenses.push({
+        ...e,
+        modifiedAt: e.modifiedAt || e.createdAt || Date.now(),
+      });
+      addedExpenses++;
+    } else {
+      const localMod = existing.modifiedAt || existing.createdAt || 0;
+      const incomingMod = e.modifiedAt || e.createdAt || 0;
+      if (incomingMod > localMod) {
+        Object.assign(existing, e);
+        updatedExpenses++;
+      }
+    }
+  });
+
+  save(); renderAll();
+  return { addedExpenses, updatedExpenses, addedMembers };
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.members || !data.expenses) throw new Error('格式不對（缺 members 或 expenses）');
+      if (!confirm(`要把這個檔案合併到「${getActiveTrip().name}」嗎？\n（會跟目前的資料合在一起，不會蓋掉）`)) return;
+      const result = mergeImport(data);
+      alert(`合併完成：\n新增 ${result.addedExpenses} 筆支出\n更新 ${result.updatedExpenses} 筆\n新增 ${result.addedMembers} 位成員`);
+    } catch (err) {
+      alert('檔案格式不對：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============= Init =============
+function init() {
+  load();
+
+  // First-run: create default trip
+  if (state.trips.length === 0) {
+    createTrip({ name: generateDefaultTripName() });
+  }
+  // Ensure active trip
+  if (!getActiveTrip()) {
+    state.activeTripId = state.trips[0].id;
+    save();
+  }
+  // Ensure default members on empty trip
+  const trip = getActiveTrip();
+  if (trip && trip.members.length === 0 && trip.expenses.length === 0) {
+    trip.members = [...DEFAULT_MEMBERS];
+    save();
+  }
+
+  // tabs
+  $$('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+  // fab
+  $('#fab').addEventListener('click', () => openExpenseModal());
+
+  // trip switcher
+  $('#trip-switcher-btn').addEventListener('click', openTripSwitcher);
+  $('#trip-switcher-close').addEventListener('click', closeTripSwitcher);
+  $('#trip-switcher-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'trip-switcher-modal') closeTripSwitcher();
+  });
+  $('#new-trip-btn').addEventListener('click', openNewTripModal);
+
+  // new trip modal
+  $('#new-trip-close').addEventListener('click', closeNewTripModal);
+  $('#new-trip-cancel').addEventListener('click', closeNewTripModal);
+  $('#new-trip-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'new-trip-modal') closeNewTripModal();
+  });
+  $('#new-trip-create').addEventListener('click', createNewTrip);
+
+  // expense modal
+  $('#expense-modal-close').addEventListener('click', closeExpenseModal);
+  $('#expense-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'expense-modal') closeExpenseModal();
+  });
+  $('#exp-save').addEventListener('click', saveExpense);
+  $('#exp-delete').addEventListener('click', deleteExpense);
+  $('#exp-amount').addEventListener('input', updateAmountTWD);
+  $('#exp-shared-all').addEventListener('click', () => {
+    const t = getActiveTrip();
+    if (!t) return;
+    if (modalShared.size === t.members.length) modalShared = new Set();
+    else modalShared = new Set(t.members);
+    renderSharedChips();
+  });
+
+  // OCR
+  $('#ocr-btn').addEventListener('click', () => $('#ocr-file').click());
+  $('#ocr-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) runOcr(file);
+    e.target.value = '';
+  });
+
+  // settings — trip info
+  $('#trip-save-btn').addEventListener('click', saveTripInfo);
+  $('#trip-delete-btn').addEventListener('click', deleteCurrentTrip);
+
+  // settings — members
+  $('#add-member-btn').addEventListener('click', () => {
+    const input = $('#new-member-input');
+    addMember(input.value);
+    input.value = '';
+    input.focus();
+  });
+  $('#new-member-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      addMember(e.target.value);
+      e.target.value = '';
+    }
+  });
+
+  // settings — rate
+  $('#exchange-rate').addEventListener('change', (e) => {
+    const v = parseFloat(e.target.value);
+    const t = getActiveTrip();
+    if (!t) return;
+    if (v > 0 && v < 1) {
+      t.rate = v;
+      save(); renderAll();
+    } else {
+      e.target.value = t.rate;
+      alert('匯率應該是 0 到 1 之間的小數，例如 0.023');
+    }
+  });
+
+  // import / export
+  $('#export-btn').addEventListener('click', exportData);
+  $('#import-btn').addEventListener('click', () => $('#import-file').click());
+  $('#import-file').addEventListener('change', (e) => {
+    if (e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  renderAll();
+}
+
+init();
+</script>
+</body>
+</html>
