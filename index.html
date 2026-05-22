@@ -1008,6 +1008,48 @@
     border: 1px solid var(--glass-line);
     border-radius: 12px;
   }
+  /* cloud sync card */
+  .cloud-code-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(212, 226, 236, 0.6), rgba(143, 180, 201, 0.4));
+    border: 1px solid var(--glass-line);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .cloud-code {
+    flex: 1;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    color: var(--blue-deep);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .cloud-status {
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-top: 10px;
+    text-align: center;
+  }
+  .cloud-divider {
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 12px;
+    margin: 14px 0;
+    position: relative;
+  }
+  .cloud-divider::before,
+  .cloud-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 38%;
+    height: 1px;
+    background: rgba(160, 120, 90, 0.18);
+  }
+  .cloud-divider::before { left: 0; }
+  .cloud-divider::after { right: 0; }
   .checkbox-row input { width: 18px; height: 18px; accent-color: var(--peach-deep); }
   .checkbox-row label { font-size: 14px; color: var(--ink); margin: 0; }
 </style>
@@ -1246,6 +1288,11 @@
     </div>
 
     <div class="card">
+      <h2>雲端同步 ☁️</h2>
+      <div id="cloud-card"></div>
+    </div>
+
+    <div class="card">
       <h2>目前旅遊</h2>
       <div class="field">
         <label>旅遊名稱</label>
@@ -1424,6 +1471,8 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ============= Constants & State =============
 const STORAGE_KEY = 'chloe-trip-tracker-v3';
@@ -1454,8 +1503,209 @@ let editingExpenseId = null;
 let modalShared = new Set();
 let tesseractWorker = null;
 
+// ============= Firebase / Cloud Sync =============
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCl28D3bc749wTkshp2BDP1QKmzBvG79Ng",
+  authDomain: "korea-trip-e79b4.firebaseapp.com",
+  projectId: "korea-trip-e79b4",
+  storageBucket: "korea-trip-e79b4.firebasestorage.app",
+  messagingSenderId: "336698455031",
+  appId: "1:336698455031:web:e4fd92989a3f751cae74f2",
+};
+
+let cloudDb = null;
+let cloudReady = false;
+let cloudUnsub = null;       // active onSnapshot unsubscribe
+let cloudListeningId = null; // cloudId currently being listened to
+let applyingRemote = false;  // guard to avoid push loops
+let pushTimer = null;
+let cloudStatus = 'off';     // off | synced | syncing | error | offline
+
+function cloudInit() {
+  if (!window.firebase || !FIREBASE_CONFIG.apiKey) {
+    cloudReady = false;
+    return;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    cloudDb = firebase.firestore();
+    cloudReady = true;
+  } catch (e) {
+    console.warn('cloud init failed', e);
+    cloudReady = false;
+  }
+}
+
+function cloudDocRef(code) {
+  return cloudDb.collection('trips').doc(code);
+}
+
+function genCloudCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function tripToCloudData(trip) {
+  return {
+    name: trip.name || '',
+    members: trip.members || [],
+    expenses: trip.expenses || [],
+    rate: trip.rate || DEFAULT_RATE,
+    startDate: trip.startDate || null,
+    endDate: trip.endDate || null,
+    updatedAt: Date.now(),
+  };
+}
+
+function mergeRemoteIntoTrip(trip, data) {
+  (data.members || []).forEach(m => { if (!trip.members.includes(m)) trip.members.push(m); });
+  const byId = new Map(trip.expenses.map(e => [e.id, e]));
+  (data.expenses || []).forEach(e => {
+    if (!e.id) return;
+    const ex = byId.get(e.id);
+    if (!ex) { trip.expenses.push({ ...e }); byId.set(e.id, e); }
+    else {
+      const lm = ex.modifiedAt || ex.createdAt || 0;
+      const rm = e.modifiedAt || e.createdAt || 0;
+      if (rm > lm) Object.assign(ex, e);
+    }
+  });
+  if (data.rate) trip.rate = data.rate;
+  if (data.name) trip.name = data.name;
+  if (data.startDate !== undefined) trip.startDate = data.startDate;
+  if (data.endDate !== undefined) trip.endDate = data.endDate;
+}
+
+async function cloudPushTrip(trip) {
+  if (!cloudReady || !trip || !trip.cloudId) return;
+  cloudStatus = 'syncing'; renderCloudCard();
+  try {
+    await cloudDocRef(trip.cloudId).set(tripToCloudData(trip));
+    cloudStatus = 'synced';
+  } catch (e) {
+    console.warn('push failed', e);
+    cloudStatus = navigator.onLine ? 'error' : 'offline';
+  }
+  renderCloudCard();
+}
+
+function cloudMaybePush() {
+  const trip = getActiveTrip();
+  if (!cloudReady || !trip || !trip.cloudId || applyingRemote) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => cloudPushTrip(trip), 800);
+}
+
+function cloudStartListen(trip) {
+  if (!cloudReady || !trip || !trip.cloudId) return;
+  if (cloudListeningId === trip.cloudId) return;
+  cloudStopListen();
+  cloudListeningId = trip.cloudId;
+  cloudStatus = 'syncing'; renderCloudCard();
+  cloudUnsub = cloudDocRef(trip.cloudId).onSnapshot(snap => {
+    if (!snap.exists) { cloudStatus = 'synced'; renderCloudCard(); return; }
+    const data = snap.data();
+    applyingRemote = true;
+    mergeRemoteIntoTrip(trip, data);
+    save();
+    applyingRemote = false;
+    cloudStatus = 'synced';
+    renderAll();
+  }, err => {
+    console.warn('snapshot error', err);
+    cloudStatus = navigator.onLine ? 'error' : 'offline';
+    renderCloudCard();
+  });
+}
+
+function cloudStopListen() {
+  if (cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
+  cloudListeningId = null;
+}
+
+function cloudSyncActiveTrip() {
+  const trip = getActiveTrip();
+  if (cloudReady && trip && trip.cloudId) {
+    cloudStartListen(trip);
+  } else {
+    cloudStopListen();
+    cloudStatus = 'off';
+  }
+}
+
+async function cloudCreateForActive() {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  if (!cloudReady) { alert('雲端尚未連線，請確認有網路，或稍後再試。'); return; }
+  const code = genCloudCode();
+  trip.cloudId = code;
+  save();
+  try {
+    await cloudDocRef(code).set(tripToCloudData(trip));
+    cloudStartListen(trip);
+    renderAll();
+    alert(`同步代碼建立成功：${code}\n\n把這組代碼給朋友，他們在「加入旅遊」輸入後，大家就會即時同步。`);
+  } catch (e) {
+    trip.cloudId = null; save(); renderAll();
+    alert('建立失敗：' + (e.message || e));
+  }
+}
+
+async function cloudJoinByCode(rawCode) {
+  const code = (rawCode || '').trim().toUpperCase();
+  if (!code) return;
+  if (!cloudReady) { alert('雲端尚未連線，請確認有網路。'); return; }
+  try {
+    const snap = await cloudDocRef(code).get();
+    if (!snap.exists) { alert('找不到這組代碼，請確認輸入正確（注意大小寫）。'); return; }
+    const data = snap.data();
+    let trip = state.trips.find(t => t.cloudId === code);
+    if (!trip) {
+      trip = {
+        id: uid(),
+        cloudId: code,
+        name: data.name || '共享旅遊',
+        members: data.members || [],
+        expenses: (data.expenses || []).map(e => ({ ...e })),
+        rate: data.rate || DEFAULT_RATE,
+        startDate: data.startDate || null,
+        endDate: data.endDate || null,
+        createdAt: Date.now(),
+      };
+      state.trips.push(trip);
+    } else {
+      mergeRemoteIntoTrip(trip, data);
+    }
+    state.activeTripId = trip.id;
+    save();
+    cloudStartListen(trip);
+    renderAll();
+    switchTab('expenses');
+    alert(`已加入「${trip.name}」，之後會自動同步 🦜`);
+  } catch (e) {
+    alert('加入失敗：' + (e.message || e));
+  }
+}
+
+function cloudUnlinkActive() {
+  const trip = getActiveTrip();
+  if (!trip || !trip.cloudId) return;
+  if (!confirm('停止同步後，這趟改回只存本機（資料不會刪除，朋友那邊也還在）。要停止嗎？')) return;
+  cloudStopListen();
+  trip.cloudId = null;
+  cloudStatus = 'off';
+  save(); renderAll();
+}
+
 function getActiveTrip() {
   return state.trips.find(t => t.id === state.activeTripId);
+}
+
+// only non-deleted expenses (tombstones used so deletions sync across devices)
+function liveExpenses(trip) {
+  return (trip && trip.expenses ? trip.expenses : []).filter(e => !e.deleted);
 }
 
 function load() {
@@ -1521,6 +1771,7 @@ function save() {
   } catch (e) {
     console.warn('save failed (storage may be blocked)', e);
   }
+  cloudMaybePush();
 }
 
 function createTrip({ name, startDate, endDate, members, copyFromTripId }) {
@@ -1625,7 +1876,7 @@ function computeBalances() {
   if (!trip) return {};
   const balance = {};
   trip.members.forEach(m => balance[m] = 0);
-  trip.expenses.forEach(exp => {
+  liveExpenses(trip).forEach(exp => {
     if (!balance.hasOwnProperty(exp.payer)) balance[exp.payer] = 0;
     balance[exp.payer] += exp.amount;
     const share = exp.amount / exp.sharedBy.length;
@@ -1643,7 +1894,7 @@ function computeTotalsPerPerson() {
   const paid = {};
   const owed = {};
   trip.members.forEach(m => { paid[m] = 0; owed[m] = 0; });
-  trip.expenses.forEach(exp => {
+  liveExpenses(trip).forEach(exp => {
     if (!paid.hasOwnProperty(exp.payer)) paid[exp.payer] = 0;
     paid[exp.payer] += exp.amount;
     const share = exp.amount / exp.sharedBy.length;
@@ -1688,6 +1939,66 @@ function renderAll() {
   renderSummary();
   renderSettings();
   renderAllTripsList();
+  renderCloudCard();
+}
+
+function cloudStatusText() {
+  if (!cloudReady) return navigator.onLine ? '雲端連線中…' : '目前離線（連線後自動同步）';
+  switch (cloudStatus) {
+    case 'synced': return '✓ 已同步';
+    case 'syncing': return '同步中…';
+    case 'error': return '⚠️ 同步出錯，稍後自動重試';
+    case 'offline': return '離線中，連線後會自動補同步';
+    default: return '';
+  }
+}
+
+function renderCloudCard() {
+  const el = $('#cloud-card');
+  if (!el) return;
+  const trip = getActiveTrip();
+  if (!trip) { el.innerHTML = ''; return; }
+
+  if (trip.cloudId) {
+    el.innerHTML = `
+      <div class="text-small text-mute" style="margin-bottom:10px;">這趟已開啟同步。把代碼給朋友，他們「加入」後大家就即時同步。</div>
+      <div class="cloud-code-box">
+        <div class="cloud-code">${escapeHtml(trip.cloudId)}</div>
+        <button class="btn btn-secondary" id="cloud-copy-btn" style="width:auto; padding:8px 14px;">複製</button>
+      </div>
+      <div class="cloud-status">${escapeHtml(cloudStatusText())}</div>
+      <button class="btn btn-danger" id="cloud-unlink-btn" style="margin-top:12px;">停止這趟的同步</button>
+    `;
+    const copyBtn = $('#cloud-copy-btn');
+    if (copyBtn) copyBtn.addEventListener('click', () => {
+      const code = trip.cloudId;
+      if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => {
+        copyBtn.textContent = '已複製!';
+        setTimeout(() => { copyBtn.textContent = '複製'; }, 1500);
+      });
+    });
+    const unlinkBtn = $('#cloud-unlink-btn');
+    if (unlinkBtn) unlinkBtn.addEventListener('click', cloudUnlinkActive);
+  } else {
+    el.innerHTML = `
+      <div class="text-small text-mute" style="margin-bottom:12px;">開啟後，三個人共用一組代碼，誰新增支出大家手機都自動看到。</div>
+      <button class="btn btn-primary" id="cloud-create-btn">為這趟建立同步代碼</button>
+      <div class="cloud-divider">或</div>
+      <div class="field-row">
+        <input type="text" id="cloud-join-input" placeholder="輸入朋友的代碼（如 K7P2QM）" maxlength="6" style="text-transform:uppercase;">
+        <button class="btn btn-secondary" id="cloud-join-btn" style="width:auto; padding:12px 18px;">加入</button>
+      </div>
+      <div class="cloud-status">${escapeHtml(cloudStatusText())}</div>
+    `;
+    const createBtn = $('#cloud-create-btn');
+    if (createBtn) createBtn.addEventListener('click', cloudCreateForActive);
+    const joinBtn = $('#cloud-join-btn');
+    if (joinBtn) joinBtn.addEventListener('click', () => cloudJoinByCode($('#cloud-join-input').value));
+    const joinInput = $('#cloud-join-input');
+    if (joinInput) joinInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') cloudJoinByCode(e.target.value);
+    });
+  }
 }
 
 function renderAllTripsList() {
@@ -1700,13 +2011,15 @@ function renderAllTripsList() {
   const sorted = [...state.trips].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   container.innerHTML = sorted.map(t => {
     const isActive = t.id === state.activeTripId;
-    const total = t.expenses.reduce((s, e) => s + e.amount, 0);
+    const live = (t.expenses || []).filter(e => !e.deleted);
+    const total = live.reduce((s, e) => s + e.amount, 0);
     const dateText = fmtDateRange(t.startDate, t.endDate);
     const meta = [
       dateText,
-      `${t.expenses.length} 筆`,
+      `${live.length} 筆`,
       total > 0 ? fmtKRW(total) : null,
       `${t.members.length} 人`,
+      t.cloudId ? '☁️ 同步中' : null,
     ].filter(Boolean).join(' · ');
     return `
       <div class="trip-list-item ${isActive ? 'active' : ''}" data-id="${t.id}">
@@ -1724,6 +2037,7 @@ function renderAllTripsList() {
       if (el.dataset.id === state.activeTripId) return;
       state.activeTripId = el.dataset.id;
       save();
+      cloudSyncActiveTrip();
       renderAll();
       switchTab('expenses');
     });
@@ -1796,7 +2110,7 @@ function renderExpenses() {
   const trip = getActiveTrip();
   if (!trip) return;
   const members = trip.members;
-  const expenses = trip.expenses;
+  const expenses = liveExpenses(trip);
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   $('#total-krw').textContent = fmtKRW(total);
@@ -2020,12 +2334,14 @@ function renderTripList() {
   const sorted = [...state.trips].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   container.innerHTML = sorted.map(t => {
     const isActive = t.id === state.activeTripId;
-    const total = t.expenses.reduce((s, e) => s + e.amount, 0);
+    const live = (t.expenses || []).filter(e => !e.deleted);
+    const total = live.reduce((s, e) => s + e.amount, 0);
     const dateText = fmtDateRange(t.startDate, t.endDate);
     const meta = [
       dateText,
-      `${t.expenses.length} 筆`,
+      `${live.length} 筆`,
       fmtKRW(total),
+      t.cloudId ? '☁️' : null,
     ].filter(Boolean).join(' · ');
     return `
       <div class="trip-list-item ${isActive ? 'active' : ''}" data-id="${t.id}">
@@ -2042,6 +2358,7 @@ function renderTripList() {
     el.addEventListener('click', () => {
       state.activeTripId = el.dataset.id;
       save();
+      cloudSyncActiveTrip();
       renderAll();
       closeTripSwitcher();
     });
@@ -2096,6 +2413,7 @@ function createNewTrip() {
   });
   closeNewTripModal();
   closeTripSwitcher();
+  cloudSyncActiveTrip();
   renderAll();
   switchTab('expenses');
 }
@@ -2294,7 +2612,8 @@ function deleteExpense() {
   const trip = getActiveTrip();
   if (!trip || !editingExpenseId) return;
   if (!confirm('確定要刪除這筆支出嗎？')) return;
-  trip.expenses = trip.expenses.filter(e => e.id !== editingExpenseId);
+  const exp = trip.expenses.find(e => e.id === editingExpenseId);
+  if (exp) { exp.deleted = true; exp.modifiedAt = Date.now(); }
   save(); renderAll();
   closeExpenseModal();
 }
@@ -2739,6 +3058,18 @@ function init() {
     if (e.target.files[0]) importData(e.target.files[0]);
     e.target.value = '';
   });
+
+  // cloud sync init
+  cloudInit();
+  cloudSyncActiveTrip();
+  // reconnect / push when network returns
+  window.addEventListener('online', () => {
+    if (!cloudReady) cloudInit();
+    cloudSyncActiveTrip();
+    cloudMaybePush();
+    renderCloudCard();
+  });
+  window.addEventListener('offline', () => { cloudStatus = 'offline'; renderCloudCard(); });
 
   renderAll();
 }
