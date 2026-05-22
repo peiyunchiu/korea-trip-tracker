@@ -7,6 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="韓國記帳">
 <meta name="theme-color" content="#f4ad8e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%A6%9C%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23fce8db'/%3E%3Ctext x='50' y='52' font-size='62' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%A6%9C%3C/text%3E%3C/svg%3E">
 <title>韓國旅遊記帳 한국 여행</title>
 <style>
   :root {
@@ -1560,7 +1562,11 @@ function deleteTrip(tripId) {
 
 function generateDefaultTripName() {
   const d = new Date();
-  return `韓國 ${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const base = `韓國 ${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+  if (!state.trips.some(t => t.name === base)) return base;
+  let n = 2;
+  while (state.trips.some(t => t.name === `${base} (${n})`)) n++;
+  return `${base} (${n})`;
 }
 
 // ============= Helpers =============
